@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatusType {
+  bounced
+  sent
+}
+
+model Audience {
+  id            String          @id @default(uuid())
+  name          String
+  emailCampaign EmailCampaign[]
+  recipients    Recipient[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmailCampaign {
+  id                     String                   @id @default(uuid())
+  title                  String?
+  sender                 String?
+  subject                String?
+  html                   String?
+  audience               Audience                 @relation(fields: [audienceId], references: [id])
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  audienceId             String
+  CampaignDeliveryStatus CampaignDeliveryStatus[]
+}
+
+model Recipient {
+  id                     String                   @id @default(uuid())
+  name                   String?
+  email                  String
+  audience               Audience?                @relation(fields: [audienceId], references: [id])
+  audienceId             String?
+  CampaignDeliveryStatus CampaignDeliveryStatus[]
+  emailCampaignId        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, audienceId])
+}
+
+model CampaignDeliveryStatus {
+  id              String        @id @default(uuid())
+  status          StatusType
+  emailCampaignId String
+  emailCampaign   EmailCampaign @relation(fields: [emailCampaignId], references: [id], onDelete: Cascade)
+  recipient       Recipient     @relation(fields: [recipientId], references: [id])
+  recipientId     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

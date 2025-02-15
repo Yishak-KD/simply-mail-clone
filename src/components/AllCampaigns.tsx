@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
 import EmailItem from "./email/EmailItem";
 import Header from "./Header";
 
-const HomePage = () => {
+const AllCampaigns = () => {
   return (
-    <div>
+    <div className="mt-20">
       <div className="border-b">
         <div className="mx-auto w-4/5">
           <Header />
@@ -16,4 +16,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default AllCampaigns;
