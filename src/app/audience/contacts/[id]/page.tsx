@@ -1,9 +1,9 @@
-import RecipientDetail from "@/components/audience/detail/RecipientDetail";
+import ContactDetail from "@/components/audience/detail/ContactDetail";
 
 export default function AudiencePageWithId() {
   return (
     <div className="mt-20">
-      <RecipientDetail />
+      <ContactDetail />
     </div>
   );
 }

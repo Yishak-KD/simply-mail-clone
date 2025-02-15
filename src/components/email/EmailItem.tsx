@@ -11,7 +11,7 @@ const EmailItem = () => {
   const router = useRouter();
 
   const getAllEmailCampaigns = async () => {
-    const res = await axios.post("/api/emailCampaign/getEmailCampaign");
+    const res = await axios.get("/api/emailCampaign");
 
     if (isSuccessfullStatus(res)) {
       const campaigns = res.data.value;

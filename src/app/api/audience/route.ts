@@ -1,4 +1,4 @@
-import { createAudience, fetchAudienceList } from "@/db/emailCampaign";
+import { createAudience, fetchAudienceList } from "@/db/audience";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {

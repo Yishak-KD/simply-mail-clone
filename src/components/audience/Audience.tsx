@@ -54,7 +54,7 @@ const Audience = () => {
   };
 
   const handleAudienceClick = (id: string) => {
-    router.push(`/audience/${id}`);
+    router.push(`/audience/contacts/${id}`);
   };
 
   useEffect(() => {

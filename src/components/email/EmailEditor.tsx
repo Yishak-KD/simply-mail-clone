@@ -5,8 +5,9 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Snackbar from "@mui/material/Snackbar";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
-import { KeyboardEvent, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import EditableField from "./EditableField";
+import { isSuccessfullStatus } from "@/util/ResponseValidation";
 
 const EmailEditor = () => {
   const [to, setTo] = useState<string>("");
@@ -21,7 +22,7 @@ const EmailEditor = () => {
   const [editSubject, setEditSubject] = useState(false);
   const [editBodyText, setEditBodyText] = useState<boolean>(false);
 
-  const [campaignName, setCampaignName] = useState<string>("Untitled");
+  const [campaignName, setCampaignName] = useState<string>();
   const [editNameClicked, setEditNameClicked] = useState<boolean>(false);
   const [isEmailLoading, setIsEmailLoading] = useState<boolean>(false);
   const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
@@ -31,7 +32,19 @@ const EmailEditor = () => {
   );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
-  const param = useParams()
+  const param = useParams();
+
+  const fetchEmailCampaignTitle = async () => {
+    const res = await axios.get(`/api/emailCampaign/${param.id as string}`);
+    
+    if(isSuccessfullStatus(res)) {
+      setCampaignName(res.data.value.title as string)
+    }
+
+    console.log("-----------------Res for name title----------------------");
+    console.log(campaignName);
+    console.log("-----------------Res for name title----------------------");
+  };
 
   const handleCampaignNameChange = (event: string) => {
     setCampaignName(event);
@@ -54,13 +67,14 @@ const EmailEditor = () => {
     try {
       const emailList = to.split(", ");
 
-      await axios.post("/api/emailUser", {
+      await axios.post("/api/email", {
         subject: subject,
         bodyText: "string",
         to: emailList,
         html: htmlContent,
         from: from,
-        emailCampaignId: param.id
+        newTitle: campaignName,
+        emailCampaignId: param.id,
       });
 
       setSnackbarMessage("Email sent successfully");
@@ -82,6 +96,10 @@ const EmailEditor = () => {
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
+
+  useEffect(() => {
+    fetchEmailCampaignTitle().catch((err) => console.error(err));
+  }, []);
 
   return (
     <div className="w-4/5 mx-auto bg-white rounded-lg relative">
@@ -206,6 +224,6 @@ const EmailEditor = () => {
       </Snackbar>
     </div>
   );
-}
+};
 
-export default EmailEditor
+export default EmailEditor;

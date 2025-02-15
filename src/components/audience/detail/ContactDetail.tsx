@@ -8,7 +8,7 @@ import { Recipient } from "@prisma/client";
 import { isSuccessfullStatus } from "@/util/ResponseValidation";
 import CreateRecipientModal from "@/components/modals/CreateRecipientModal";
 
-const RecipientDetail = () => {
+const ContactDetail = () => {
   const param = useParams();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [openRecipientModal, setOpenRecipientModal] = useState<boolean>(false);
@@ -19,7 +19,7 @@ const RecipientDetail = () => {
 
   const fetchRecipient = async () => {
     const res = await axios.get(
-      `/api/recipient/${Array.isArray(param.id) ? param.id[0] : param.id}`
+      `/api/recipient/${param.id as string}`
     );
 
     if (isSuccessfullStatus(res)) {
@@ -53,4 +53,4 @@ const RecipientDetail = () => {
   );
 };
 
-export default RecipientDetail;
+export default ContactDetail;

@@ -1,33 +1,38 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { isSuccessfullStatus } from "@/util/ResponseValidation";
+import { useState } from "react";
+import CTAButton from "./CTAButton";
 
 const Header = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleCreateCampaign = async () => {
+    setLoading(false);
     try {
-      const res = await axios.post("/api/emailCampaign/create");
+      const res = await axios.post("/api/emailCampaign");
 
       if (isSuccessfullStatus(res)) {
         const emailCampaignId = res.data.value.emailCampaignId;
 
-        router.push(`/create-campaign/${emailCampaignId}`, );
+        router.push(`/create-campaign/${emailCampaignId}`);
       }
     } catch (error) {
       console.error(error);
     }
+    setLoading(true);
   };
 
   return (
     <div className="flex justify-between items-center h-20">
       <h1 className="text-3xl leading-[50px] font-bold">All campaigns</h1>
-      <button
+      <CTAButton
+        title="Create"
         onClick={handleCreateCampaign}
-        className="bg-black text-white px-6 py-2 rounded-3xl h-10"
-      >
-        Create
-      </button>
+        loading={loading}
+        className="bg-black text-white px-8 py-2 rounded-full h-10"
+      />
     </div>
   );
 };

@@ -12,6 +12,7 @@ interface EmailCampaignPayload {
   html: string;
   from: string;
   emailCampaignId: string;
+  newTitle: string;
 }
 
 export async function POST(req: Request) {
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     html,
     from,
     emailCampaignId,
+    newTitle,
   }: EmailCampaignPayload = await req.json();
 
   try {
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
             subject,
             html,
             email,
+            newTitle,
           });
 
         const result = await emailUser({
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
 
         await createCampaignDeliveryStatus({
           emailCampaignId: emailCampaign.id,
-          recipientId: recipient.id,
+          recipientId: recipient?.id ?? "",
           result: Boolean(result),
         });
 

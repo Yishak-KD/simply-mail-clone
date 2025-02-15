@@ -1,4 +1,5 @@
 import prisma from "@/services/prisma";
+import { fetchAudienceList } from "./audience";
 
 export const createEmailCampaign = async () => {
   const audiences = await fetchAudienceList();
@@ -44,96 +45,40 @@ export const addEmailsToCampaign = async ({
   return response;
 };
 
-export const checkEmailCampaignExists = async ({
-  campaignId,
-}: {
-  campaignId: string;
-}) => {
-  return await prisma.audience.findUnique({
-    where: {
-      id: campaignId,
-    },
-  });
-};
-
-export const getRecipientCount = async ({
-  campaignId,
-}: {
-  campaignId: string;
-}) => {
-  return await prisma.recipient.count({
-    where: {
-      audience: {
-        emailCampaign: {
-          every: {
-            id: campaignId,
-          },
-        },
-      },
-    },
-  });
-};
-
 export const getEmailCampaigns = async () => {
   return await prisma.emailCampaign.findMany();
 };
 
-export const fetchAudienceList = async () => {
-  const audiences = await prisma.audience.findMany({
-    include: {
-      emailCampaign: true,
-      recipients: true,
-    },
-  });
-  return audiences;
-};
-
-export const createAudience = async ({
-  audienceName,
-}: {
-  audienceName: string;
-}) => {
-  const audience = await prisma.audience.create({
-    data: {
-      name: audienceName,
-    },
-  });
-
-  return audience;
-};
-
-export const fetchRecipientWithId = async ({
-  audienceId,
-}: {
-  audienceId: string;
-}) => {
-  const recipients = await prisma.recipient.findMany({
-    where: {
-      audienceId,
-    },
-  });
-  return recipients;
-};
-
-export const getAudienceAndRecipientCount = async ({
+export const getEmailCampaignTitleById = async ({
   emailCampaignId,
 }: {
   emailCampaignId: string;
 }) => {
-  const result = await prisma.emailCampaign.findUnique({
-    where: { id: emailCampaignId },
-    include: {
-      audience: {
-        include: {
-          recipients: true,
-        },
-      },
+  return await prisma.emailCampaign.findUnique({
+    where: {
+      id: emailCampaignId,
+    },
+    select: {
+      title: true,
     },
   });
-  return {
-    audience: result && result.audience,
-    recipientCount: result && result.audience.recipients.length,
-  };
+};
+
+export const updateEmailCampaignTitle = async ({
+  emailCampaignId,
+  newTitle,
+}: {
+  emailCampaignId: string;
+  newTitle: string;
+}) => {
+  return await prisma.emailCampaign.update({
+    where: {
+      id: emailCampaignId,
+    },
+    data: {
+      title: newTitle,
+    },
+  });
 };
 
 export const updateEmailCampaignAndCreateRecipients = async ({
@@ -142,12 +87,14 @@ export const updateEmailCampaignAndCreateRecipients = async ({
   subject,
   html,
   email,
+  newTitle
 }: {
   emailCampaignId: string;
   from: string;
   subject: string;
   html: string;
   email: string;
+  newTitle: string
 }) => {
   const emailCampaign = await prisma.emailCampaign.update({
     where: {
@@ -155,20 +102,17 @@ export const updateEmailCampaignAndCreateRecipients = async ({
     },
     data: {
       sender: from,
-      subject: subject,
-      html: html,
+      subject,
+      html,
+      title: newTitle
     },
   });
 
-  const recipient = await prisma.recipient.upsert({
+  const recipient = await prisma.recipient.findFirst({
     where: {
-      email_audienceId: { email, audienceId: emailCampaign.audienceId },
-    },
-    create: {
       email,
       audienceId: emailCampaign.audienceId,
     },
-    update: {},
   });
 
   return { emailCampaign, recipient };

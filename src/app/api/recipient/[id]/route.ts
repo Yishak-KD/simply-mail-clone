@@ -1,12 +1,10 @@
-import { fetchRecipientWithId } from "@/db/emailCampaign";
+import { fetchRecipientWithAudienceId } from "@/db/recipient";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  { params }: { params: { id: string } }
-) {
-  try {
-    const audienceId = params.id;
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const audienceId = params?.id;
 
+  try {
     if (!audienceId) {
       return NextResponse.json(
         {
@@ -17,7 +15,7 @@ export async function GET(
       );
     }
 
-    const res = await fetchRecipientWithId({ audienceId });
+    const res = await fetchRecipientWithAudienceId({ audienceId });
 
     return NextResponse.json(
       {
