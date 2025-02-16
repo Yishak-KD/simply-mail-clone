@@ -1,22 +1,26 @@
-import { ServerClient } from "postmark";
-import { htmlToText } from "html-to-text";
+import { ServerClient } from 'postmark';
+import { htmlToText } from 'html-to-text';
 
 interface EmailUserProps {
+  from: string;
+  fromName: string;
+  to: string;
+  replyTo?: string;
   subject: string;
   bodyText: string;
-  to: string;
-  from: string;
-  html: string;
+  bodyHTML: string;
   attachmentContent?: string;
   attachmentFileName?: string;
 }
 
-const emailUser = async ({
+const email = async ({
+  from,
+  fromName,
+  to,
+  replyTo,
   subject,
   bodyText,
-  to,
-  from,
-  html,
+  bodyHTML,
   attachmentContent,
   attachmentFileName,
 }: EmailUserProps) => {
@@ -28,26 +32,26 @@ const emailUser = async ({
     const postmarkApiToken = process.env.POSTMARK_API_TOKEN;
 
     if (!postmarkApiToken) {
-      throw new Error("Postmark API token is missing");
+      throw new Error('Postmark API token is missing');
     }
 
     const client = new ServerClient(postmarkApiToken);
 
     const result = await client.sendEmail({
-      From: from,
+      From: `${fromName} ${from}`,
       To: to,
       Subject: subject,
       TextBody: bodyText,
-      MessageStream: "broadcast",
-      ReplyTo: from,
-      HtmlBody: html,
+      MessageStream: 'broadcast',
+      ReplyTo: replyTo ?? from,
+      HtmlBody: bodyHTML,
       Attachments: content
         ? [
             {
               Content: btoa(content),
               Name: `${attachmentFileName}.txt`,
-              ContentType: "text/plain",
-              ContentID: "attachment",
+              ContentType: 'text/plain',
+              ContentID: 'attachment',
             },
           ]
         : undefined,
@@ -59,4 +63,4 @@ const emailUser = async ({
   }
 };
 
-export default emailUser;
+export default email;

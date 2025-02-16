@@ -1,16 +1,18 @@
-import { NextResponse } from "next/server";
-import emailUser from "./emailUser";
+import { NextResponse } from 'next/server';
 import {
   createCampaignDeliveryStatus,
   updateEmailCampaignAndCreateRecipients,
-} from "@/db/emailCampaign";
+} from '@/db/emailCampaign';
+import sendEmail from '@/services/email';
 
 interface EmailCampaignPayload {
   subject: string;
   bodyText: string;
   to: string[];
+  replyTo?: string;
   html: string;
   from: string;
+  fromName: string;
   emailCampaignId: string;
   newTitle: string;
 }
@@ -20,18 +22,21 @@ export async function POST(req: Request) {
     subject,
     bodyText,
     to,
+    replyTo,
     html,
     from,
+    fromName,
     emailCampaignId,
     newTitle,
   }: EmailCampaignPayload = await req.json();
 
   try {
-    if (!to || to.length === 0) {
+    if (!subject || !bodyText || !to?.length || !html || !from || !fromName) {
       return NextResponse.json(
         {
           success: false,
-          error: "No recipients provided",
+          error:
+            'Missing required fields: subject, bodyText, to, html, from, and fromName must all be provided',
         },
         { status: 400 }
       );
@@ -52,17 +57,19 @@ export async function POST(req: Request) {
             newTitle,
           });
 
-        const result = await emailUser({
+        const result = await sendEmail({
           to: email,
+          replyTo,
           from,
+          fromName,
           subject,
           bodyText,
-          html,
+          bodyHTML: html,
         });
 
         await createCampaignDeliveryStatus({
           emailCampaignId: emailCampaign.id,
-          recipientId: recipient?.id ?? "",
+          recipientId: recipient?.id ?? '',
           result: Boolean(result),
         });
 
@@ -94,7 +101,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: "Unable to send email",
+        error: 'Unable to send email',
       },
       { status: 500 }
     );

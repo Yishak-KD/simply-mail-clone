@@ -44,7 +44,7 @@ model EmailCampaign {
 model Recipient {
   id                     String                   @id @default(uuid())
   name                   String?
-  email                  String
+  email                  String                   @unique
   audience               Audience?                @relation(fields: [audienceId], references: [id])
   audienceId             String?
   CampaignDeliveryStatus CampaignDeliveryStatus[]

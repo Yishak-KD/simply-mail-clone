@@ -1,8 +1,9 @@
-import { AudienceWithRecipient } from "@/types/type";
-import { isSuccessfullStatus } from "@/util/ResponseValidation";
-import { Audience } from "@prisma/client";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants';
+import { AudienceWithRecipient } from '@/types/type';
+import { isSuccessfullStatus } from '@/util/ResponseValidation';
+import { Audience } from '@prisma/client';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 interface EditableFieldProps {
   label: string;
@@ -28,13 +29,13 @@ const EditableField = ({
 
   const fetchAudienceLists = async () => {
     try {
-      const response = await axios.get("/api/audience");
+      const response = await axios.get('/api/audience');
 
       if (isSuccessfullStatus(response)) {
         setAudienceList(response.data.value as AudienceWithRecipient[]);
       }
     } catch (error) {
-      console.error("Error fetching audience lists:", error);
+      console.error('Error fetching audience lists:', error);
     }
   };
 
@@ -49,7 +50,7 @@ const EditableField = ({
     if (selected) {
       const recipients = selected.recipients
         .map((recipient) => recipient.email)
-        .join(", ");
+        .join(', ');
       onChange(recipients);
     }
   };
@@ -66,22 +67,22 @@ const EditableField = ({
   };
 
   return (
-    <div className="border-b px-6 py-8">
-      <p className="font-semibold">{label}</p>
+    <div className='border-b px-6 py-8'>
+      <p className='font-semibold'>{label}</p>
       {!editing ? (
-        <div className="flex justify-between items-center">
-          <p className="font-light">
-            {label === "To" ? (
+        <div className='flex justify-between items-center'>
+          <p className='font-light'>
+            {label === 'To' ? (
               <>
-                {placeholder}{" "}
+                {placeholder}{' '}
                 {value && (
-                  <span className="text-blue-800 font-bold">
-                    {`${value.split(", ").length} recipients`}
+                  <span className='text-blue-800 font-bold'>
+                    {`${value.split(', ').length} recipients`}
                   </span>
                 )}
               </>
-            ) : label === "HTML Template" && value ? (
-              "HTML template loaded"
+            ) : label === 'HTML Template' && value ? (
+              'HTML template loaded'
             ) : value ? (
               value
             ) : (
@@ -89,27 +90,27 @@ const EditableField = ({
             )}
           </p>
           <button
-            className="w-[20%] border-black border text-black font-semibold px-6 py-2 rounded-3xl"
+            className='w-[20%] border-black border text-black font-semibold px-6 py-2 rounded-3xl'
             onClick={onEdit}
           >
             {isFileUpload
-              ? "Upload Template"
-              : label === "To"
-                ? "Edit recipients"
-                : label === "From"
-                  ? "Edit from"
-                  : label === "Body Text"
-                    ? "Add Body text"
-                    : "Add subject"}
+              ? 'Upload Template'
+              : label === 'To'
+                ? 'Edit recipients'
+                : label === 'From'
+                  ? 'Edit from'
+                  : label === 'Body Text'
+                    ? 'Add Body text'
+                    : 'Add subject'}
           </button>
         </div>
       ) : (
-        <div className="mt-2 w-1/4">
+        <div className='mt-2 w-1/4'>
           {isFileUpload ? (
             <input
-              type="file"
-              accept=".html"
-              className="w-full p-2 border rounded"
+              type='file'
+              accept='.html'
+              className='w-full p-2 border rounded'
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -117,20 +118,21 @@ const EditableField = ({
                 }
               }}
             />
-          ) : label === "To" ? (
-            <div className="space-y-2">
+          ) : label === 'To' ? (
+            <div className='space-y-2'>
               <select
-                className="w-full p-2 border rounded"
+                className='w-full p-2 border rounded'
                 value={
                   audienceList.find(
-                    (a) => a.recipients.map((r) => r.email).join(", ") === value
-                  )?.name || ""
+                    (a) => a.recipients.map((r) => r.email).join(', ') === value
+                  )?.name || ''
                 }
                 onChange={(e) => handleAudienceChange(e.target.value)}
               >
-                <option value="" disabled>
+                <option value='' disabled>
                   Choose an audience
                 </option>
+                <option>{KEDUS_BIBLE_FIREBASE_AUDIENCE}</option>
                 {audienceList
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((audience) => (
@@ -142,21 +144,21 @@ const EditableField = ({
             </div>
           ) : (
             <input
-              type="text"
-              className="w-full p-2 border rounded"
+              type='text'
+              className='w-full p-2 border rounded'
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
             />
           )}
-          <div className="flex gap-2 mt-2">
+          <div className='flex gap-2 mt-2'>
             <button
-              className="bg-black rounded-lg text-white px-4 py-1"
+              className='bg-black rounded-lg text-white px-4 py-1'
               onClick={onEdit}
             >
               Save
             </button>
-            <button className="border px-4 py-1 rounded" onClick={onEdit}>
+            <button className='border px-4 py-1 rounded' onClick={onEdit}>
               Cancel
             </button>
           </div>
