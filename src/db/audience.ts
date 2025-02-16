@@ -19,7 +19,7 @@ export const fetchAudienceWithId = async (
     return audience
 }
 
-export const fetchAudienceList = async (): Promise<Audience[] | null> => {
+export const fetchAllAudiences = async (): Promise<Audience[] | null> => {
     return await prisma.audience.findMany()
 }
 
@@ -41,17 +41,31 @@ export const addRecipientsToAudience = async ({
 }: {
     audienceId: string
     emailsWithNames: { email: string; name?: string }[]
-}): Promise<Recipient[] | null> => {
+}): Promise<Recipient[] | undefined> => {
+    // Create recipient entries
     await prisma.recipient.createMany({
         data: emailsWithNames.map(({ email, name }) => ({
-            audienceId,
             email,
             ...(name && { name }),
         })),
         skipDuplicates: true,
     })
 
-    return prisma.recipient.findMany({
-        where: { audienceId },
+    // Connect those recipients to the audience
+    await prisma.audience.update({
+        where: { id: audienceId },
+        data: {
+            recipients: {
+                connect: emailsWithNames.map(({ email }) => ({ email })),
+            },
+        },
     })
+
+    // Return the updated list of recipients
+    const updatedAudience = await prisma.audience.findUnique({
+        where: { id: audienceId },
+        include: { recipients: true },
+    })
+
+    return updatedAudience?.recipients
 }

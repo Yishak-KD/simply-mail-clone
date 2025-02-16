@@ -19,50 +19,57 @@ enum StatusType {
 }
 
 model Audience {
-  id            String          @id @default(uuid())
-  name          String
-  emailCampaign EmailCampaign[]
-  recipients    Recipient[]
+  id   String @id @default(uuid())
+  name String
+
+  recipients     Recipient[]
+  emailCampaigns EmailCampaign[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model EmailCampaign {
-  id                     String                   @id @default(uuid())
-  title                  String?
-  sender                 String?
-  subject                String?
-  html                   String?
-  audience               Audience                 @relation(fields: [audienceId], references: [id])
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  audienceId             String
+  id       String  @id @default(uuid())
+  title    String?
+  subject  String?
+  html     String?
+  bodyText String?
+  from     String?
+  fromName String?
+  replyTo  String?
+
   CampaignDeliveryStatus CampaignDeliveryStatus[]
+
+  audienceId String
+  audience   Audience @relation(fields: [audienceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Recipient {
-  id                     String                   @id @default(uuid())
-  name                   String?
-  email                  String                   @unique
-  audience               Audience?                @relation(fields: [audienceId], references: [id])
-  audienceId             String?
+  id    String  @id @default(uuid())
+  name  String?
+  email String
+
+  audiences              Audience[]
   CampaignDeliveryStatus CampaignDeliveryStatus[]
-  emailCampaignId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([email, audienceId])
+  @@unique([email])
 }
 
 model CampaignDeliveryStatus {
-  id              String        @id @default(uuid())
-  status          StatusType
+  id     String     @id @default(uuid())
+  status StatusType
+
   emailCampaignId String
   emailCampaign   EmailCampaign @relation(fields: [emailCampaignId], references: [id], onDelete: Cascade)
-  recipient       Recipient     @relation(fields: [recipientId], references: [id])
   recipientId     String
+  recipient       Recipient     @relation(fields: [recipientId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

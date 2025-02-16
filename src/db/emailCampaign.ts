@@ -1,11 +1,11 @@
 import prisma from '@/services/prisma'
-import { fetchAudienceList } from './audience'
+import { fetchAllAudiences } from './audience'
 import { EmailCampaign } from '@prisma/client'
 
 export const createEmailCampaign = async (): Promise<
     EmailCampaign | null | undefined
 > => {
-    const audiences = await fetchAudienceList()
+    const audiences = await fetchAllAudiences()
 
     const firstAudience = audiences?.length ? audiences[0] : undefined
     if (!firstAudience) {
@@ -60,41 +60,37 @@ export const updateEmailCampaignTitle = async ({
     })
 }
 
-export const updateEmailCampaignAndCreateRecipients = async ({
+export const updateEmailCampaign = async ({
     emailCampaignId,
     from,
     subject,
     html,
-    email,
+    bodyText,
     newTitle,
+    fromName,
+    replyTo,
 }: {
     emailCampaignId: string
     from: string
     subject: string
     html: string
-    email: string
+    bodyText?: string
     newTitle: string
+    fromName?: string
+    replyTo?: string
 }) => {
-    const emailCampaign = await prisma.emailCampaign.update({
-        where: {
-            id: emailCampaignId,
-        },
+    return await prisma.emailCampaign.update({
+        where: { id: emailCampaignId },
         data: {
-            sender: from,
+            title: newTitle,
             subject,
             html,
-            title: newTitle,
+            bodyText,
+            from,
+            fromName,
+            replyTo,
         },
     })
-
-    const recipient = await prisma.recipient.findFirst({
-        where: {
-            email,
-            audienceId: emailCampaign.audienceId,
-        },
-    })
-
-    return { emailCampaign, recipient }
 }
 
 export const createCampaignDeliveryStatus = async ({

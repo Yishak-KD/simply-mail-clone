@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET({ params }: { params: { id: string } }) {
     const id = params.id
-
     const audience = await fetchAudienceWithId(id)
 
     if (!audience) {
@@ -42,13 +41,31 @@ export async function POST(
 ) {
     const id = params.id
 
+    const {
+        recipients,
+    }: {
+        recipients: { email: string; name?: string }[]
+        audienceName: string
+    } = await req.json()
+
     // This is where you update the audience with the new data
-    // such as the recipients etc...
+    // such as recipients etc...
+    // updating audience name
 
     const result = await addRecipientsToAudience({
         audienceId: id,
-        emailsWithNames: [],
+        emailsWithNames: recipients,
     })
+
+    if (!result) {
+        return NextResponse.json(
+            {
+                success: false,
+                error: 'Failed to add recipients to audience.',
+            },
+            { status: 500 },
+        )
+    }
 
     try {
         return NextResponse.json(
