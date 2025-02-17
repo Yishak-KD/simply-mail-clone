@@ -1,8 +1,8 @@
-import { createAudience, fetchAllAudiences } from '@/db/audience'
+import { createAudience, getAudiencesWithRecipients } from '@/db/audience'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
-    const audiences = await fetchAllAudiences()
+    const audiences = await getAudiencesWithRecipients()
 
     if (!audiences) {
         return NextResponse.json(

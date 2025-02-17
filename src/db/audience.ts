@@ -19,8 +19,14 @@ export const fetchAudienceWithId = async (
     return audience
 }
 
-export const fetchAllAudiences = async (): Promise<Audience[] | null> => {
-    return await prisma.audience.findMany()
+export const getAudiencesWithRecipients = async (): Promise<
+    AudienceWithRecipents[] | null
+> => {
+    return await prisma.audience.findMany({
+        include: {
+            recipients: true,
+        },
+    })
 }
 
 export const createAudience = async ({

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         replyTo,
         html,
         from,
-        fromName,
+        // fromName,
         emailCampaignId,
         newTitle,
     }: EmailCampaignPayload = await req.json()
@@ -36,8 +36,8 @@ export async function POST(req: Request) {
             !bodyText ||
             !to?.length ||
             !html ||
-            !from ||
-            !fromName
+            !from
+            // !fromName
         ) {
             return NextResponse.json(
                 {
@@ -53,12 +53,11 @@ export async function POST(req: Request) {
 
         for (const email of to) {
             try {
-                const { emailCampaign, recipient } = await updateEmailCampaign({
+                const emailCampaign = await updateEmailCampaign({
                     emailCampaignId,
                     from,
                     subject,
                     html,
-                    email,
                     newTitle,
                 })
 
@@ -66,7 +65,6 @@ export async function POST(req: Request) {
                     to: email,
                     replyTo,
                     from,
-                    fromName,
                     subject,
                     bodyText,
                     bodyHTML: html,
@@ -74,7 +72,7 @@ export async function POST(req: Request) {
 
                 await createCampaignDeliveryStatus({
                     emailCampaignId: emailCampaign.id,
-                    recipientId: recipient?.id ?? '',
+                    email,
                     result: Boolean(result),
                 })
 

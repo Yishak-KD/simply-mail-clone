@@ -14,7 +14,7 @@ const Header = () => {
       const res = await axios.post("/api/emailCampaign");
 
       if (isSuccessfullStatus(res)) {
-        const emailCampaignId = res.data.value.emailCampaignId;
+        const emailCampaignId = res.data.value.id;
 
         router.push(`/create-campaign/${emailCampaignId}`);
       }

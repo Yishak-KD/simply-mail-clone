@@ -1,11 +1,12 @@
 import prisma from '@/services/prisma'
-import { fetchAllAudiences } from './audience'
-import { EmailCampaign } from '@prisma/client'
+import { getAudiencesWithRecipients } from './audience'
+import { CampaignDeliveryStatus, EmailCampaign } from '@prisma/client'
+import { fetchRecipientByEmail } from './recipient'
 
 export const createEmailCampaign = async (): Promise<
     EmailCampaign | null | undefined
 > => {
-    const audiences = await fetchAllAudiences()
+    const audiences = await getAudiencesWithRecipients()
 
     const firstAudience = audiences?.length ? audiences[0] : undefined
     if (!firstAudience) {
@@ -24,7 +25,7 @@ export const createEmailCampaign = async (): Promise<
     })
 }
 
-export const getEmailCampaigns = async () => {
+export const getEmailCampaigns = async (): Promise<EmailCampaign[]> => {
     return await prisma.emailCampaign.findMany()
 }
 
@@ -32,7 +33,7 @@ export const getEmailCampaignTitleById = async ({
     emailCampaignId,
 }: {
     emailCampaignId: string
-}) => {
+}): Promise<{ title: string | null } | null> => {
     return await prisma.emailCampaign.findUnique({
         where: {
             id: emailCampaignId,
@@ -49,7 +50,7 @@ export const updateEmailCampaignTitle = async ({
 }: {
     emailCampaignId: string
     newTitle: string
-}) => {
+}): Promise<EmailCampaign> => {
     return await prisma.emailCampaign.update({
         where: {
             id: emailCampaignId,
@@ -78,7 +79,7 @@ export const updateEmailCampaign = async ({
     newTitle: string
     fromName?: string
     replyTo?: string
-}) => {
+}): Promise<EmailCampaign> => {
     return await prisma.emailCampaign.update({
         where: { id: emailCampaignId },
         data: {
@@ -95,18 +96,19 @@ export const updateEmailCampaign = async ({
 
 export const createCampaignDeliveryStatus = async ({
     emailCampaignId,
-    recipientId,
+    email,
     result,
 }: {
     emailCampaignId: string
-    recipientId: string
+    email: string
     result: boolean
-}) => {
-    await prisma.campaignDeliveryStatus.create({
+}): Promise<CampaignDeliveryStatus> => {
+    const recipient = await fetchRecipientByEmail({ email })
+    return await prisma.campaignDeliveryStatus.create({
         data: {
             status: result ? 'sent' : 'bounced',
             emailCampaignId,
-            recipientId,
+            recipientId: recipient?.id,
         },
     })
 }
