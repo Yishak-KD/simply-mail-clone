@@ -10,6 +10,7 @@ import CreateRecipientModal from "@/components/modals/CreateRecipientModal";
 
 const ContactDetail = () => {
   const param = useParams();
+  const audienceId = param.id as string
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [openRecipientModal, setOpenRecipientModal] = useState<boolean>(false);
 
@@ -48,6 +49,7 @@ const ContactDetail = () => {
       <CreateRecipientModal
         showRecipientModal={openRecipientModal}
         onCloseRecipientModal={() => setOpenRecipientModal(false)}
+        audienceId={audienceId}
       />
     </div>
   );

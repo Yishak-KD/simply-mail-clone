@@ -1,7 +1,11 @@
 import { addRecipientsToAudience, fetchAudienceWithId } from '@/db/audience'
+import { parseExcelToJson } from '@/utils/parseExcelToJson'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET({ params }: { params: { id: string } }) {
+export async function GET(
+    req: Request,
+    { params }: { params: { id: string } },
+) {
     const id = params.id
     const audience = await fetchAudienceWithId(id)
 
@@ -41,20 +45,16 @@ export async function POST(
 ) {
     const id = params.id
 
-    const {
-        recipients,
-    }: {
-        recipients: { email: string; name?: string }[]
-        audienceName: string
-    } = await req.json()
+    const data = await req.formData()
+    const file = data.get('file') as File
 
-    // This is where you update the audience with the new data
-    // such as recipients etc...
-    // updating audience name
+    const arrayBuffer = await file.arrayBuffer()
+
+    const emailsWithNames = parseExcelToJson(arrayBuffer)
 
     const result = await addRecipientsToAudience({
         audienceId: id,
-        emailsWithNames: recipients,
+        emailsWithNames,
     })
 
     if (!result) {
