@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
 import { ChurchMember } from '@/types/type'
+import { isValidEmail } from './emailValidation'
 
 export const parseExcelToJson = (
     arrayBuffer: ArrayBuffer,
@@ -10,8 +11,10 @@ export const parseExcelToJson = (
 
     const jsonData: ChurchMember[] = XLSX.utils.sheet_to_json(worksheet)
 
-    return jsonData.map(data => ({
-        email: data.Email,
-        name: data.Name,
-    }))
+    return jsonData
+        .filter(data => isValidEmail(data.Email))
+        .map(data => ({
+            email: data.Email,
+            name: data.Name,
+        }))
 }
