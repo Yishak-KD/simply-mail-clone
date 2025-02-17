@@ -19,11 +19,11 @@ const ContactDetail = () => {
 
   const fetchRecipient = async () => {
     const res = await axios.get(
-      `/api/recipient/${param.id as string}`
+      `/api/audience/${param.id as string}`
     );
 
     if (isSuccessfullStatus(res)) {
-      setRecipients(res.data.value as Recipient[]);
+      setRecipients(res.data.value.recipients as Recipient[]);
     }
   };
 
