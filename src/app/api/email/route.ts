@@ -4,11 +4,14 @@ import {
     updateEmailCampaign,
 } from '@/db/emailCampaign'
 import sendEmail from '@/services/email'
+import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants'
+import { fetchRecipientEmailsByAudienceId } from '@/db/audience'
+import { fetchKBUsersFromFirebase } from '@/services/firebase'
 
 interface EmailCampaignPayload {
     subject: string
     bodyText: string
-    to: string[]
+    audienceId: string
     replyTo?: string
     html: string
     from: string
@@ -21,7 +24,7 @@ export async function POST(req: Request) {
     const {
         subject,
         bodyText,
-        to,
+        audienceId,
         replyTo,
         html,
         from,
@@ -34,7 +37,7 @@ export async function POST(req: Request) {
         if (
             !subject ||
             !bodyText ||
-            !to?.length ||
+            !audienceId ||
             !html ||
             !from ||
             !fromName
@@ -51,7 +54,12 @@ export async function POST(req: Request) {
         const results = []
         const failedEmails = []
 
-        for (const email of to) {
+        const emails: string[] =
+            audienceId === KEDUS_BIBLE_FIREBASE_AUDIENCE
+                ? (await fetchKBUsersFromFirebase()).map(user => user.email)
+                : await fetchRecipientEmailsByAudienceId({ audienceId })
+
+        for (const email of emails) {
             try {
                 const emailCampaign = await updateEmailCampaign({
                     emailCampaignId,
@@ -59,7 +67,7 @@ export async function POST(req: Request) {
                     subject,
                     html,
                     newTitle,
-                    fromName
+                    fromName,
                 })
 
                 const result = await sendEmail({
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
                 failedEmails: failedEmails,
                 summary: `Successfully sent ${successCount} email(s), failed to send ${failureCount} email(s)`,
             },
-            { status: failureCount === to.length ? 500 : 200 },
+            { status: failureCount === emails.length ? 500 : 200 },
         )
     } catch (err) {
         console.warn({ err })

@@ -1,19 +1,6 @@
 import prisma from '@/services/prisma'
 import { Recipient } from '@prisma/client'
 
-export const fetchRecipientWithAudienceId = async ({
-    audienceId,
-}: {
-    audienceId: string
-}) => {
-    const recipients = await prisma.recipient.findMany({
-        where: {
-            audienceId,
-        },
-    })
-    return recipients
-}
-
 export const fetchRecipientByEmail = async ({
     email,
 }: {

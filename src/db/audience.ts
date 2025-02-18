@@ -19,14 +19,8 @@ export const fetchAudienceWithId = async (
     return audience
 }
 
-export const getAudiencesWithRecipients = async (): Promise<
-    AudienceWithRecipents[] | null
-> => {
-    return await prisma.audience.findMany({
-        include: {
-            recipients: true,
-        },
-    })
+export const fetchAllAudiences = async (): Promise<Audience[] | null> => {
+    return await prisma.audience.findMany()
 }
 
 export const createAudience = async ({
@@ -74,4 +68,26 @@ export const addRecipientsToAudience = async ({
     })
 
     return updatedAudience?.recipients
+}
+
+export const fetchRecipientEmailsByAudienceId = async ({
+    audienceId,
+}: {
+    audienceId: string
+}):Promise<string[]> => {
+    const audience = await prisma.audience.findUnique({
+        where: {
+            id: audienceId,
+        },
+        select: {
+            recipients: {
+                select: {
+                    email: true,
+                },
+            },
+        },
+    })
+
+    const emails = audience?.recipients.map(recipient => recipient.email)
+    return emails ?? []
 }

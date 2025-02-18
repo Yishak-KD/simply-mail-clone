@@ -1,12 +1,12 @@
 import prisma from '@/services/prisma'
-import { getAudiencesWithRecipients } from './audience'
+import { fetchAllAudiences } from './audience'
 import { CampaignDeliveryStatus, EmailCampaign } from '@prisma/client'
 import { fetchRecipientByEmail } from './recipient'
 
 export const createEmailCampaign = async (): Promise<
     EmailCampaign | null | undefined
 > => {
-    const audiences = await getAudiencesWithRecipients()
+    const audiences = await fetchAllAudiences()
 
     const firstAudience = audiences?.length ? audiences[0] : undefined
     if (!firstAudience) {

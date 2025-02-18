@@ -16,7 +16,7 @@ import {
 import { DEFAULT_FROM_EMAIL, EMAIL_STORAGE_KEY } from '@/constants/constants'
 
 interface StoredEmailData {
-    to: string
+    audienceId: string
     from: string
     subject: string
     fromName: string
@@ -33,7 +33,7 @@ const EmailEditor = () => {
     const inputRef = useRef<HTMLInputElement | null>(null)
 
     const [emailData, setEmailData] = useState<StoredEmailData>({
-        to: '',
+        audienceId: '',
         from: DEFAULT_FROM_EMAIL,
         subject: '',
         fromName: '',
@@ -43,7 +43,7 @@ const EmailEditor = () => {
     })
 
     const [editStates, setEditStates] = useState({
-        to: false,
+        audienceId: false,
         from: false,
         fromName: false,
         subject: false,
@@ -77,7 +77,8 @@ const EmailEditor = () => {
 
                 setEmailData(prev => ({
                     ...prev,
-                    campaignName: storedData?.campaignName || emailCampaignTitle,
+                    campaignName:
+                        storedData?.campaignName || emailCampaignTitle,
                 }))
             }
         } catch (error) {
@@ -123,7 +124,7 @@ const EmailEditor = () => {
 
     const handleSendEmail = async () => {
         const {
-            to,
+            audienceId,
             from,
             subject,
             htmlContent,
@@ -132,7 +133,7 @@ const EmailEditor = () => {
             bodyText,
         } = emailData
 
-        if (!to || !from || !subject || !htmlContent || !campaignName) {
+        if (!audienceId || !from || !subject || !htmlContent || !campaignName) {
             setSnackbarMessage(
                 'Please fill in all required fields before sending the email.',
             )
@@ -143,13 +144,11 @@ const EmailEditor = () => {
 
         setIsEmailLoading(true)
         try {
-            const emailList = to.split(', ')
-
             await axios.post('/api/email', {
                 subject,
                 bodyText,
                 fromName,
-                to: emailList,
+                audienceId,
                 html: htmlContent,
                 from,
                 newTitle: campaignName,
@@ -239,12 +238,12 @@ const EmailEditor = () => {
             </div>
             <div className="mt-12 border rounded-lg">
                 <EditableField
-                    label="To"
+                    label="audienceId"
                     placeholder="Who are you sending this email to?"
-                    value={emailData.to}
-                    onEdit={() => toggleEdit('to')}
-                    editing={editStates.to}
-                    onChange={handleFieldChange('to')}
+                    value={emailData.audienceId}
+                    onEdit={() => toggleEdit('audienceId')}
+                    editing={editStates.audienceId}
+                    onChange={handleFieldChange('audienceId')}
                 />
                 <EditableField
                     label="From"
