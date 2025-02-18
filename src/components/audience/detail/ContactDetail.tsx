@@ -5,7 +5,7 @@ import RecipientTable from "./RecipientTable";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Recipient } from "@prisma/client";
-import { isSuccessfullStatus } from "@/util/ResponseValidation";
+import { isSuccessfullStatus } from "@/utils/ResponseValidation";
 import CreateRecipientModal from "@/components/modals/CreateRecipientModal";
 
 const ContactDetail = () => {

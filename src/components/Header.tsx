@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { isSuccessfullStatus } from "@/util/ResponseValidation";
+import { isSuccessfullStatus } from "@/utils/ResponseValidation";
 import { useState } from "react";
 import CTAButton from "./CTAButton";
 

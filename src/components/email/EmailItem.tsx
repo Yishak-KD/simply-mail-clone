@@ -1,4 +1,4 @@
-import { isSuccessfullStatus } from "@/util/ResponseValidation";
+import { isSuccessfullStatus } from "@/utils/ResponseValidation";
 import { EmailCampaign } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";

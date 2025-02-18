@@ -3,7 +3,7 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import CreateAudienceModal from '../modals/CreateAudienceModal'
-import { isSuccessfullStatus } from '@/util/ResponseValidation'
+import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import AudienceTable from './AudienceTable'
 import type { Audience } from '@prisma/client'
 import { useRouter } from 'next/navigation'

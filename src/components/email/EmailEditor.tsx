@@ -7,7 +7,7 @@ import axios from 'axios'
 import { useParams, useRouter } from 'next/navigation'
 import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import EditableField from './EditableField'
-import { isSuccessfullStatus } from '@/util/ResponseValidation'
+import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 
 const EmailEditor = () => {
     const [to, setTo] = useState<string>('')
@@ -77,6 +77,10 @@ const EmailEditor = () => {
         setIsEmailLoading(true)
         try {
             const emailList = to.split(', ')
+
+            console.log('----------------email List---------------------')
+            console.log({emailList})
+            console.log('----------------email List---------------------')
 
             await axios.post('/api/email', {
                 subject: subject,

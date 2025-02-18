@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import Snackbar from '@mui/material/Snackbar'
-import { isSuccessfullStatus } from '@/util/ResponseValidation'
+import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import axios from 'axios'
 
 interface RecipientModalProps {
