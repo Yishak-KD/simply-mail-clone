@@ -72,12 +72,12 @@ const EmailEditor = () => {
             )
 
             if (isSuccessfullStatus(res)) {
-                const serverTitle = res.data.value.title as string
+                const emailCampaignTitle = res.data.value.title as string
                 const storedData = readStoredObject<StoredEmailData>(storageKey)
 
                 setEmailData(prev => ({
                     ...prev,
-                    campaignName: storedData?.campaignName || serverTitle,
+                    campaignName: storedData?.campaignName || emailCampaignTitle,
                 }))
             }
         } catch (error) {
