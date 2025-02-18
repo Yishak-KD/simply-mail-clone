@@ -14,6 +14,8 @@ import {
     writeStoredObject,
 } from '@/utils/localstorage'
 import { DEFAULT_FROM_EMAIL, EMAIL_STORAGE_KEY } from '@/constants/constants'
+import { CampaignDeliveryStatus } from '@prisma/client'
+import CampaignStatusCard from './CampaignStatus'
 
 interface StoredEmailData {
     audienceId: string
@@ -58,6 +60,23 @@ const EmailEditor = () => {
     const [snackbarSeverity, setSnackbarSeverity] = useState<
         'success' | 'error'
     >('success')
+    const [isEmailSent, setIsEmailSent] = useState<Boolean>(false)
+    const [emailCampaignStatus, setEmailCampaignStatus] = useState<
+        CampaignDeliveryStatus[]
+    >([])
+
+    const fetchEmailCampaignStatus = async () => {
+        const res = await axios.get(`/api/emailCampaign/${campaignId}/status`)
+
+        if (isSuccessfullStatus(res)) {
+            setIsEmailSent(res.data.value.isEmailSent)
+            setEmailCampaignStatus(res.data.statuses)
+        }
+    }
+
+    useEffect(() => {
+        fetchEmailCampaignStatus()
+    }, [])
 
     useEffect(() => {
         if (emailData.campaignName) {
@@ -178,138 +197,151 @@ const EmailEditor = () => {
 
     return (
         <div className="w-4/5 mx-auto bg-white rounded-lg relative">
-            <button
-                className="absolute top-4 right-4 bg-black text-white px-6 py-2 rounded-3xl w-[10%]"
-                onClick={handleSendEmail}
-            >
-                <div className="flex items-center justify-center mx-auto outline-none">
-                    {isEmailLoading ? (
-                        <CircularProgress
-                            size={21}
-                            style={{
-                                color: 'white',
-                            }}
-                        />
-                    ) : (
-                        'Send'
-                    )}
-                </div>
-            </button>
-            <div className="space-y-2 mt-8 w-full mx-auto">
-                <div className="flex flex-col items-start space-y-2">
-                    <input
-                        ref={inputRef}
-                        value={emailData.campaignName}
-                        onChange={e =>
-                            handleFieldChange('campaignName')(e.target.value)
-                        }
-                        onKeyDown={handleKeyDown}
-                        className="font-light text-3xl"
+            {isEmailSent ? (
+                <div>
+                    <CampaignStatusCard
+                        audience="KD"
+                        
                     />
-                    {!editNameClicked ? (
-                        <button
-                            onClick={handleRenameClick}
-                            className="font-bold text-xs"
-                        >
-                            Edit name
-                        </button>
-                    ) : (
-                        <div className="flex space-x-2 w-[15%]">
-                            <button
-                                onClick={() => {
-                                    setEditNameClicked(false)
-                                }}
-                                className="font-bold text-xs bg-black text-white px-6 py-2 w-full rounded-3xl"
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setEditNameClicked(false)
-                                    inputRef.current?.blur()
-                                }}
-                                className="font-bold text-xs text-black border border-black px-6 w-full py-2 rounded-3xl"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    )}
                 </div>
-            </div>
-            <div className="mt-12 border rounded-lg">
-                <EditableField
-                    label="audienceId"
-                    placeholder="Who are you sending this email to?"
-                    value={emailData.audienceId}
-                    onEdit={() => toggleEdit('audienceId')}
-                    editing={editStates.audienceId}
-                    onChange={handleFieldChange('audienceId')}
-                />
-                <EditableField
-                    label="From"
-                    placeholder="Enter from name"
-                    value={emailData.fromName}
-                    onEdit={() => toggleEdit('fromName')}
-                    editing={editStates.fromName}
-                    onChange={handleFieldChange('fromName')}
-                />
-                <EditableField
-                    label="From"
-                    placeholder="Enter sender email"
-                    value={emailData.from}
-                    onEdit={() => toggleEdit('from')}
-                    editing={editStates.from}
-                    onChange={handleFieldChange('from')}
-                />
-                <EditableField
-                    label="Subject"
-                    placeholder="What's the subject line for this email?"
-                    value={emailData.subject}
-                    onEdit={() => toggleEdit('subject')}
-                    editing={editStates.subject}
-                    onChange={handleFieldChange('subject')}
-                />
-                <EditableField
-                    label="Body Text"
-                    placeholder="Enter the body text for your email"
-                    value={emailData.bodyText}
-                    onEdit={() => toggleEdit('bodyText')}
-                    editing={editStates.bodyText}
-                    onChange={handleFieldChange('bodyText')}
-                />
-                <EditableField
-                    label="HTML Template"
-                    placeholder="Upload an HTML template for your email"
-                    value={emailData.htmlContent}
-                    onEdit={() => toggleEdit('html')}
-                    editing={editStates.html}
-                    onChange={handleFieldChange('htmlContent')}
-                    isFileUpload={true}
-                />
-            </div>
-            <Snackbar
-                open={openSnackbar}
-                autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-                message={snackbarMessage}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                style={{
-                    textAlign: 'center',
-                }}
-            >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbarSeverity}
-                    sx={{
-                        width: 'fit',
-                    }}
-                >
-                    {snackbarMessage}
-                </Alert>
-            </Snackbar>
+            ) : (
+                <>
+                    <button
+                        className="absolute top-4 right-4 bg-black text-white px-6 py-2 rounded-3xl w-[10%]"
+                        onClick={handleSendEmail}
+                    >
+                        <div className="flex items-center justify-center mx-auto outline-none">
+                            {isEmailLoading ? (
+                                <CircularProgress
+                                    size={21}
+                                    style={{
+                                        color: 'white',
+                                    }}
+                                />
+                            ) : (
+                                'Send'
+                            )}
+                        </div>
+                    </button>
+                    <div className="space-y-2 mt-8 w-full mx-auto">
+                        <div className="flex flex-col items-start space-y-2">
+                            <input
+                                ref={inputRef}
+                                value={emailData.campaignName}
+                                onChange={e =>
+                                    handleFieldChange('campaignName')(
+                                        e.target.value,
+                                    )
+                                }
+                                onKeyDown={handleKeyDown}
+                                className="font-light text-3xl"
+                            />
+                            {!editNameClicked ? (
+                                <button
+                                    onClick={handleRenameClick}
+                                    className="font-bold text-xs"
+                                >
+                                    Edit name
+                                </button>
+                            ) : (
+                                <div className="flex space-x-2 w-[15%]">
+                                    <button
+                                        onClick={() => {
+                                            setEditNameClicked(false)
+                                        }}
+                                        className="font-bold text-xs bg-black text-white px-6 py-2 w-full rounded-3xl"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditNameClicked(false)
+                                            inputRef.current?.blur()
+                                        }}
+                                        className="font-bold text-xs text-black border border-black px-6 w-full py-2 rounded-3xl"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="mt-12 border rounded-lg">
+                        <EditableField
+                            label="audienceId"
+                            placeholder="Who are you sending this email to?"
+                            value={emailData.audienceId}
+                            onEdit={() => toggleEdit('audienceId')}
+                            editing={editStates.audienceId}
+                            onChange={handleFieldChange('audienceId')}
+                        />
+                        <EditableField
+                            label="From"
+                            placeholder="Enter from name"
+                            value={emailData.fromName}
+                            onEdit={() => toggleEdit('fromName')}
+                            editing={editStates.fromName}
+                            onChange={handleFieldChange('fromName')}
+                        />
+                        <EditableField
+                            label="From"
+                            placeholder="Enter sender email"
+                            value={emailData.from}
+                            onEdit={() => toggleEdit('from')}
+                            editing={editStates.from}
+                            onChange={handleFieldChange('from')}
+                        />
+                        <EditableField
+                            label="Subject"
+                            placeholder="What's the subject line for this email?"
+                            value={emailData.subject}
+                            onEdit={() => toggleEdit('subject')}
+                            editing={editStates.subject}
+                            onChange={handleFieldChange('subject')}
+                        />
+                        <EditableField
+                            label="Body Text"
+                            placeholder="Enter the body text for your email"
+                            value={emailData.bodyText}
+                            onEdit={() => toggleEdit('bodyText')}
+                            editing={editStates.bodyText}
+                            onChange={handleFieldChange('bodyText')}
+                        />
+                        <EditableField
+                            label="HTML Template"
+                            placeholder="Upload an HTML template for your email"
+                            value={emailData.htmlContent}
+                            onEdit={() => toggleEdit('html')}
+                            editing={editStates.html}
+                            onChange={handleFieldChange('htmlContent')}
+                            isFileUpload={true}
+                        />
+                    </div>
+                    <Snackbar
+                        open={openSnackbar}
+                        autoHideDuration={3000}
+                        onClose={handleCloseSnackbar}
+                        message={snackbarMessage}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        style={{
+                            textAlign: 'center',
+                        }}
+                    >
+                        <Alert
+                            onClose={handleCloseSnackbar}
+                            severity={snackbarSeverity}
+                            sx={{
+                                width: 'fit',
+                            }}
+                        >
+                            {snackbarMessage}
+                        </Alert>
+                    </Snackbar>
+                </>
+            )}
         </div>
     )
 }

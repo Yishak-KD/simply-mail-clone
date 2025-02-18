@@ -11,12 +11,14 @@ interface RecipientModalProps {
     showRecipientModal: boolean
     onCloseRecipientModal: VoidFunction
     audienceId: string
+    onSuccess: () => Promise<void>
 }
 
 const CreateRecipientModal = ({
     showRecipientModal,
     onCloseRecipientModal,
     audienceId,
+    onSuccess,
 }: RecipientModalProps) => {
     const [file, setFile] = useState<File | null>(null)
     const [error, setError] = useState('')
@@ -75,8 +77,7 @@ const CreateRecipientModal = ({
                 setSnackbarMessage('File uploaded successfully!')
                 setSnackbarSeverity('success')
                 setFile(null)
-            } else {
-                throw new Error('Upload failed. Please try again.')
+                await onSuccess()
             }
         } catch {
             setSnackbarMessage('Upload failed. Please try again.')
