@@ -3,6 +3,7 @@ import { htmlToText } from 'html-to-text';
 
 interface EmailUserProps {
   from: string;
+  fromName: string
   to: string;
   replyTo?: string;
   subject: string;
@@ -14,6 +15,7 @@ interface EmailUserProps {
 
 const email = async ({
   from,
+  fromName,
   to,
   replyTo,
   subject,
@@ -36,7 +38,7 @@ const email = async ({
     const client = new ServerClient(postmarkApiToken);
 
     const result = await client.sendEmail({
-      From: from,
+      From: `${fromName} ${from}`,
       To: to,
       Subject: subject,
       TextBody: bodyText,

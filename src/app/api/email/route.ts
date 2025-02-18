@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         replyTo,
         html,
         from,
-        // fromName,
+        fromName,
         emailCampaignId,
         newTitle,
     }: EmailCampaignPayload = await req.json()
@@ -36,8 +36,8 @@ export async function POST(req: Request) {
             !bodyText ||
             !to?.length ||
             !html ||
-            !from
-            // !fromName
+            !from ||
+            !fromName
         ) {
             return NextResponse.json(
                 {
@@ -59,10 +59,12 @@ export async function POST(req: Request) {
                     subject,
                     html,
                     newTitle,
+                    fromName
                 })
 
                 const result = await sendEmail({
                     to: email,
+                    fromName,
                     replyTo,
                     from,
                     subject,

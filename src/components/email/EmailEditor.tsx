@@ -8,21 +8,49 @@ import { useParams, useRouter } from 'next/navigation'
 import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import EditableField from './EditableField'
 import { isSuccessfullStatus } from '@/utils/ResponseValidation'
+import {
+    clearLocalStorageItem,
+    readStoredObject,
+    writeStoredObject,
+} from '@/utils/localstorage'
+import { DEFAULT_FROM_EMAIL, EMAIL_STORAGE_KEY } from '@/constants/constants'
+
+interface StoredEmailData {
+    to: string
+    from: string
+    subject: string
+    fromName: string
+    bodyText: string
+    htmlContent: string
+    campaignName: string
+}
 
 const EmailEditor = () => {
-    const [to, setTo] = useState<string>('')
-    const [from, setFrom] = useState('contact@kedusbible.com')
-    const [subject, setSubject] = useState('')
-    const [bodyText, setBodyText] = useState('')
-    const [htmlContent, setHtmlContent] = useState<string>('')
-    const [editHtml, setEditHtml] = useState(false)
+    const router = useRouter()
+    const param = useParams()
+    const campaignId = param.id
+    const storageKey = `${EMAIL_STORAGE_KEY}_${campaignId}`
+    const inputRef = useRef<HTMLInputElement | null>(null)
 
-    const [editTo, setEditTo] = useState(false)
-    const [editFrom, setEditFrom] = useState(false)
-    const [editSubject, setEditSubject] = useState(false)
-    const [editBodyText, setEditBodyText] = useState<boolean>(false)
+    const [emailData, setEmailData] = useState<StoredEmailData>({
+        to: '',
+        from: DEFAULT_FROM_EMAIL,
+        subject: '',
+        fromName: '',
+        bodyText: '',
+        htmlContent: '',
+        campaignName: '',
+    })
 
-    const [campaignName, setCampaignName] = useState<string>('')
+    const [editStates, setEditStates] = useState({
+        to: false,
+        from: false,
+        fromName: false,
+        subject: false,
+        bodyText: false,
+        html: false,
+    })
+
     const [editNameClicked, setEditNameClicked] = useState<boolean>(false)
     const [isEmailLoading, setIsEmailLoading] = useState<boolean>(false)
     const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
@@ -30,26 +58,61 @@ const EmailEditor = () => {
     const [snackbarSeverity, setSnackbarSeverity] = useState<
         'success' | 'error'
     >('success')
-    const inputRef = useRef<HTMLInputElement | null>(null)
-    const router = useRouter()
-    const param = useParams()
+
+    useEffect(() => {
+        if (emailData.campaignName) {
+            writeStoredObject(storageKey, emailData)
+        }
+    }, [emailData, storageKey])
 
     const fetchEmailCampaignTitle = async () => {
-        const res = await axios.get(`/api/emailCampaign/${param.id as string}`)
+        try {
+            const res = await axios.get(
+                `/api/emailCampaign/${param.id as string}`,
+            )
 
-        if (isSuccessfullStatus(res)) {
-            setCampaignName(res.data.value.title as string)
+            if (isSuccessfullStatus(res)) {
+                const serverTitle = res.data.value.title as string
+                const storedData = readStoredObject<StoredEmailData>(storageKey)
+
+                setEmailData(prev => ({
+                    ...prev,
+                    campaignName: storedData?.campaignName || serverTitle,
+                }))
+            }
+        } catch (error) {
+            console.error('Error fetching campaign title:', error)
         }
     }
 
-    const handleCampaignNameChange = (event: string) => {
-        setCampaignName(event)
+    useEffect(() => {
+        const storedData = readStoredObject<StoredEmailData>(storageKey)
+        if (storedData) {
+            setEmailData(prev => ({
+                ...prev,
+                ...storedData,
+            }))
+        }
+
+        if (!storedData?.campaignName) {
+            fetchEmailCampaignTitle().catch(err => console.error(err))
+        }
+    }, [storageKey])
+
+    const handleFieldChange =
+        (field: keyof StoredEmailData) => (value: string) => {
+            setEmailData(prev => ({ ...prev, [field]: value }))
+        }
+
+    const toggleEdit = (field: keyof typeof editStates) => {
+        setEditStates(prev => ({ ...prev, [field]: !prev[field] }))
     }
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault()
             inputRef.current?.blur()
+            setEditNameClicked(false)
         }
     }
 
@@ -59,13 +122,17 @@ const EmailEditor = () => {
     }
 
     const handleSendEmail = async () => {
-        if (
-            !to ||
-            !from ||
-            !subject ||
-            !htmlContent ||
-            !campaignName
-        ) {
+        const {
+            to,
+            from,
+            subject,
+            htmlContent,
+            campaignName,
+            fromName,
+            bodyText,
+        } = emailData
+
+        if (!to || !from || !subject || !htmlContent || !campaignName) {
             setSnackbarMessage(
                 'Please fill in all required fields before sending the email.',
             )
@@ -78,16 +145,13 @@ const EmailEditor = () => {
         try {
             const emailList = to.split(', ')
 
-            console.log('----------------email List---------------------')
-            console.log({emailList})
-            console.log('----------------email List---------------------')
-
             await axios.post('/api/email', {
-                subject: subject,
-                bodyText: bodyText,
+                subject,
+                bodyText,
+                fromName,
                 to: emailList,
                 html: htmlContent,
-                from: from,
+                from,
                 newTitle: campaignName,
                 emailCampaignId: param.id,
             })
@@ -96,6 +160,7 @@ const EmailEditor = () => {
             setSnackbarSeverity('success')
             setOpenSnackbar(true)
 
+            clearLocalStorageItem(storageKey)
             setTimeout(() => {
                 router.push('/campaigns')
             }, 1000)
@@ -111,10 +176,6 @@ const EmailEditor = () => {
     const handleCloseSnackbar = () => {
         setOpenSnackbar(false)
     }
-
-    useEffect(() => {
-        fetchEmailCampaignTitle().catch(err => console.error(err))
-    }, [])
 
     return (
         <div className="w-4/5 mx-auto bg-white rounded-lg relative">
@@ -139,8 +200,10 @@ const EmailEditor = () => {
                 <div className="flex flex-col items-start space-y-2">
                     <input
                         ref={inputRef}
-                        value={campaignName}
-                        onChange={e => handleCampaignNameChange(e.target.value)}
+                        value={emailData.campaignName}
+                        onChange={e =>
+                            handleFieldChange('campaignName')(e.target.value)
+                        }
                         onKeyDown={handleKeyDown}
                         className="font-light text-3xl"
                     />
@@ -178,42 +241,50 @@ const EmailEditor = () => {
                 <EditableField
                     label="To"
                     placeholder="Who are you sending this email to?"
-                    value={to}
-                    onEdit={() => setEditTo(!editTo)}
-                    editing={editTo}
-                    onChange={setTo}
+                    value={emailData.to}
+                    onEdit={() => toggleEdit('to')}
+                    editing={editStates.to}
+                    onChange={handleFieldChange('to')}
+                />
+                <EditableField
+                    label="From"
+                    placeholder="Enter from name"
+                    value={emailData.fromName}
+                    onEdit={() => toggleEdit('fromName')}
+                    editing={editStates.fromName}
+                    onChange={handleFieldChange('fromName')}
                 />
                 <EditableField
                     label="From"
                     placeholder="Enter sender email"
-                    value={from}
-                    onEdit={() => setEditFrom(!editFrom)}
-                    editing={editFrom}
-                    onChange={setFrom}
+                    value={emailData.from}
+                    onEdit={() => toggleEdit('from')}
+                    editing={editStates.from}
+                    onChange={handleFieldChange('from')}
                 />
                 <EditableField
                     label="Subject"
                     placeholder="What's the subject line for this email?"
-                    value={subject}
-                    onEdit={() => setEditSubject(!editSubject)}
-                    editing={editSubject}
-                    onChange={setSubject}
+                    value={emailData.subject}
+                    onEdit={() => toggleEdit('subject')}
+                    editing={editStates.subject}
+                    onChange={handleFieldChange('subject')}
                 />
                 <EditableField
                     label="Body Text"
                     placeholder="Enter the body text for your email"
-                    value={bodyText}
-                    onEdit={() => setEditBodyText(!editBodyText)}
-                    editing={editBodyText}
-                    onChange={setBodyText}
+                    value={emailData.bodyText}
+                    onEdit={() => toggleEdit('bodyText')}
+                    editing={editStates.bodyText}
+                    onChange={handleFieldChange('bodyText')}
                 />
                 <EditableField
                     label="HTML Template"
                     placeholder="Upload an HTML template for your email"
-                    value={htmlContent}
-                    onEdit={() => setEditHtml(!editHtml)}
-                    editing={editHtml}
-                    onChange={setHtmlContent}
+                    value={emailData.htmlContent}
+                    onEdit={() => toggleEdit('html')}
+                    editing={editStates.html}
+                    onChange={handleFieldChange('htmlContent')}
                     isFileUpload={true}
                 />
             </div>
