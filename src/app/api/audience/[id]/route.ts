@@ -1,5 +1,5 @@
 import { addRecipientsToAudience, fetchAudienceWithId } from '@/db/audience'
-import { parseExcelToJson } from '@/utils/parseExcelToJson'
+import { parseExcelToJson } from '@/util/parseExcelToJson'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(

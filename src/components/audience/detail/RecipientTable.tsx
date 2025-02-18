@@ -7,7 +7,7 @@ const RecipientTable = ({ recipient }: { recipient: Recipient[] }) => {
     <div className="overflow-x-auto w-4/5 mx-auto">
       <div className="max-h-[80vh] overflow-y-auto">
         <table className="min-w-full bg-white border border-gray-300">
-          <thead>
+          <thead className="sticky top-0">
             <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Email</th>
