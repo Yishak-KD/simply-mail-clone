@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-    createCampaignDeliveryStatus,
-    updateEmailCampaign,
-} from '@/db/emailCampaign'
+import { createCampaignDeliveryStatus } from '@/db/emailCampaign'
 import sendEmail from '@/services/email'
 import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants'
 import { fetchRecipientEmailsByAudienceId } from '@/db/audience'
@@ -30,70 +27,56 @@ export async function POST(req: Request) {
         from,
         fromName,
         emailCampaignId,
-        newTitle,
     }: EmailCampaignPayload = await req.json()
 
     try {
-        if (
-            !subject ||
-            !bodyText ||
-            !audienceId ||
-            !html ||
-            !from ||
-            !fromName
-        ) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Missing required fields: subject, bodyText, to, html, from, and fromName must all be provided',
-                },
-                { status: 400 },
-            )
-        }
+        const results: string[] = []
+        const failedEmails: string[] = []
+        let updatedHtml: string = html
 
-        const results = []
-        const failedEmails = []
-
-        const emails: string[] =
+        const recipients: { userName?: string | null; userEmail: string }[] =
             audienceId === KEDUS_BIBLE_FIREBASE_AUDIENCE
-                ? (await fetchKBUsersFromFirebase()).map(user => user.email)
+                ? (await fetchKBUsersFromFirebase()).map(user => {
+                      return { userName: user.name, userEmail: user.email }
+                  })
                 : await fetchRecipientEmailsByAudienceId({ audienceId })
 
-        for (const email of emails) {
+        for (const recipient of recipients) {
             try {
-                const emailCampaign = await updateEmailCampaign({
-                    emailCampaignId,
-                    from,
-                    subject,
-                    html,
-                    newTitle,
-                    fromName,
-                })
+                if (recipient.userName) {
+                    updatedHtml = html.replace(
+                        'Kedus Bible User',
+                        recipient.userName,
+                    )
+                }
 
                 const result = await sendEmail({
-                    to: email,
+                    to: recipient.userEmail,
                     fromName,
                     replyTo,
                     from,
                     subject,
                     bodyText,
-                    bodyHTML: html,
+                    bodyHTML: updatedHtml,
                 })
 
                 await createCampaignDeliveryStatus({
-                    emailCampaignId: emailCampaign.id,
-                    email,
+                    emailCampaignId,
+                    email: recipient.userEmail,
                     result: Boolean(result),
                 })
 
                 if (result) {
-                    results.push(email)
+                    results.push(recipient.userEmail)
                 } else {
-                    failedEmails.push(email)
+                    failedEmails.push(recipient.userEmail)
                 }
             } catch (error) {
-                console.warn(`Failed to send email to ${email}:`, error)
-                failedEmails.push(email)
+                console.warn(
+                    `Failed to send email to ${recipient.userEmail}:`,
+                    error,
+                )
+                failedEmails.push(recipient.userEmail)
             }
         }
 
@@ -107,7 +90,7 @@ export async function POST(req: Request) {
                 failedEmails: failedEmails,
                 summary: `Successfully sent ${successCount} email(s), failed to send ${failureCount} email(s)`,
             },
-            { status: failureCount === emails.length ? 500 : 200 },
+            { status: failureCount === recipients.length ? 500 : 200 },
         )
     } catch (err) {
         console.warn({ err })

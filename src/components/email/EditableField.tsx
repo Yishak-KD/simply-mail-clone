@@ -9,11 +9,11 @@ interface EditableFieldProps {
     label: string
     placeholder: string
     value: string
-    onEdit: () => void
-    editing: boolean
+    onEdit?: () => void
+    editing?: boolean
     onChange: (value: string) => void
-    options?: Audience[]
     isFileUpload?: boolean
+    onSave: VoidFunction
 }
 
 const EditableField = ({
@@ -24,6 +24,7 @@ const EditableField = ({
     editing,
     onChange,
     isFileUpload,
+    onSave
 }: EditableFieldProps) => {
     const [audienceList, setAudienceList] = useState<Audience[]>([])
 
@@ -166,7 +167,7 @@ const EditableField = ({
                     <div className="flex gap-2 mt-2">
                         <button
                             className="bg-black rounded-lg text-white px-4 py-1"
-                            onClick={onEdit}
+                            onClick={onSave}
                         >
                             Save
                         </button>

@@ -28,23 +28,28 @@ export const createEmailCampaign = async (): Promise<
 export const getEmailCampaigns = async (): Promise<EmailCampaign[]> => {
     return await prisma.emailCampaign.findMany({
         orderBy: {
-            createdAt: 'desc'
-        }
+            createdAt: 'desc',
+        },
     })
 }
 
-export const getEmailCampaignTitleById = async ({
+export const fetchEmailCampaignById = async ({
     emailCampaignId,
 }: {
     emailCampaignId: string
-}): Promise<{ title: string | null } | null> => {
+}) => {
     return await prisma.emailCampaign.findUnique({
         where: {
             id: emailCampaignId,
         },
         select: {
             title: true,
-        },
+            from: true,
+            fromName: true,
+            subject: true,
+            bodyText: true,
+            html: true,
+        }
     })
 }
 
@@ -79,9 +84,9 @@ export const updateEmailCampaign = async ({
     from: string
     subject: string
     html: string
-    bodyText?: string
+    bodyText: string
     newTitle: string
-    fromName?: string
+    fromName: string
     replyTo?: string
 }): Promise<EmailCampaign> => {
     return await prisma.emailCampaign.update({

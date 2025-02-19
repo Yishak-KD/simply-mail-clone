@@ -8,40 +8,33 @@ import { useParams, useRouter } from 'next/navigation'
 import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import EditableField from './EditableField'
 import { isSuccessfullStatus } from '@/utils/ResponseValidation'
-import {
-    clearLocalStorageItem,
-    readStoredObject,
-    writeStoredObject,
-} from '@/utils/localstorage'
-import { DEFAULT_FROM_EMAIL, EMAIL_STORAGE_KEY } from '@/constants/constants'
-import { CampaignDeliveryStatus } from '@prisma/client'
+import { DEFAULT_FROM_EMAIL } from '@/constants/constants'
+import { CampaignDeliveryStatus, EmailCampaign } from '@prisma/client'
 import CampaignStatusCard from './CampaignStatus'
 
-interface StoredEmailData {
-    audienceId: string
+interface EmailData {
     from: string
     subject: string
     fromName: string
     bodyText: string
     htmlContent: string
-    campaignName: string
+    newTitle: string
 }
 
 const EmailEditor = () => {
     const router = useRouter()
     const param = useParams()
     const campaignId = param.id
-    const storageKey = `${EMAIL_STORAGE_KEY}_${campaignId}`
     const inputRef = useRef<HTMLInputElement | null>(null)
 
-    const [emailData, setEmailData] = useState<StoredEmailData>({
-        audienceId: '',
+    const [audienceId, setAudienceId] = useState<string>('')
+    const [emailData, setEmailData] = useState<EmailData>({
         from: DEFAULT_FROM_EMAIL,
         subject: '',
         fromName: '',
         bodyText: '',
         htmlContent: '',
-        campaignName: '',
+        newTitle: '',
     })
 
     const [editStates, setEditStates] = useState({
@@ -60,45 +53,41 @@ const EmailEditor = () => {
     const [snackbarSeverity, setSnackbarSeverity] = useState<
         'success' | 'error'
     >('success')
-    const [isEmailSent, setIsEmailSent] = useState<Boolean>(false)
     const [emailCampaignStatus, setEmailCampaignStatus] = useState<
         CampaignDeliveryStatus[]
     >([])
 
     const fetchEmailCampaignStatus = async () => {
-        const res = await axios.get(`/api/emailCampaign/${campaignId}/status`)
+        try {
+            const res = await axios.get(
+                `/api/emailCampaign/${campaignId}/status`,
+            )
 
-        if (isSuccessfullStatus(res)) {
-            setIsEmailSent(res.data.value.isEmailSent)
-            setEmailCampaignStatus(res.data.statuses)
+            if (isSuccessfullStatus(res)) {
+                setEmailCampaignStatus(res.data.value)
+            }
+        } catch (error) {
+            console.error('Error fetching email campaign status:', error)
         }
     }
 
-    useEffect(() => {
-        fetchEmailCampaignStatus()
-    }, [])
-
-    useEffect(() => {
-        if (emailData.campaignName) {
-            writeStoredObject(storageKey, emailData)
-        }
-    }, [emailData, storageKey])
-
-    const fetchEmailCampaignTitle = async () => {
+    const fetchEmailCampaign = async () => {
         try {
             const res = await axios.get(
                 `/api/emailCampaign/${param.id as string}`,
             )
 
             if (isSuccessfullStatus(res)) {
-                const emailCampaignTitle = res.data.value.title as string
-                const storedData = readStoredObject<StoredEmailData>(storageKey)
-
-                setEmailData(prev => ({
-                    ...prev,
-                    campaignName:
-                        storedData?.campaignName || emailCampaignTitle,
-                }))
+                const campaignData: EmailCampaign = res.data.value
+                setEmailData({
+                    from: campaignData.from || DEFAULT_FROM_EMAIL,
+                    subject: campaignData.subject || '',
+                    fromName: campaignData.fromName || '',
+                    bodyText: campaignData.bodyText || '',
+                    htmlContent: campaignData.html || '',
+                    newTitle: campaignData.title || '',
+                })
+                setAudienceId(campaignData.audienceId || '')
             }
         } catch (error) {
             console.error('Error fetching campaign title:', error)
@@ -106,31 +95,42 @@ const EmailEditor = () => {
     }
 
     useEffect(() => {
-        const storedData = readStoredObject<StoredEmailData>(storageKey)
-        if (storedData) {
-            setEmailData(prev => ({
-                ...prev,
-                ...storedData,
-            }))
+        fetchEmailCampaignStatus()
+        fetchEmailCampaign()
+    }, [])
+
+    const saveEmailData = async (data: EmailData) => {
+        try {
+            await axios.post(`/api/emailCampaign/${campaignId}`, data)
+        } catch (error) {
+            console.error('Error saving email data:', error)
+        }
+    }
+
+    const handleEmailDataChange =
+        (field: keyof EmailData) => (value: string) => {
+            const newData = { ...emailData, [field]: value }
+            setEmailData(newData)
         }
 
-        if (!storedData?.campaignName) {
-            fetchEmailCampaignTitle().catch(err => console.error(err))
-        }
-    }, [storageKey])
+    const handleSaveField = async (field: keyof typeof editStates) => {
+        await saveEmailData(emailData)
+        toggleEdit(field)
+    }
 
-    const handleFieldChange =
-        (field: keyof StoredEmailData) => (value: string) => {
-            setEmailData(prev => ({ ...prev, [field]: value }))
-        }
+    const handleAudienceIdChange = (value: string) => {
+        setEmailData(emailData)
+        setAudienceId(value)
+    }
 
     const toggleEdit = (field: keyof typeof editStates) => {
         setEditStates(prev => ({ ...prev, [field]: !prev[field] }))
     }
 
-    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault()
+            await saveEmailData(emailData)
             inputRef.current?.blur()
             setEditNameClicked(false)
         }
@@ -142,17 +142,10 @@ const EmailEditor = () => {
     }
 
     const handleSendEmail = async () => {
-        const {
-            audienceId,
-            from,
-            subject,
-            htmlContent,
-            campaignName,
-            fromName,
-            bodyText,
-        } = emailData
+        const { subject, bodyText, newTitle, from, fromName, htmlContent } =
+            emailData
 
-        if (!audienceId || !from || !subject || !htmlContent || !campaignName) {
+        if (!audienceId || !from || !subject || !htmlContent || !newTitle) {
             setSnackbarMessage(
                 'Please fill in all required fields before sending the email.',
             )
@@ -168,9 +161,9 @@ const EmailEditor = () => {
                 bodyText,
                 fromName,
                 audienceId,
-                html: htmlContent,
                 from,
-                newTitle: campaignName,
+                html: htmlContent,
+                newTitle,
                 emailCampaignId: param.id,
             })
 
@@ -178,7 +171,6 @@ const EmailEditor = () => {
             setSnackbarSeverity('success')
             setOpenSnackbar(true)
 
-            clearLocalStorageItem(storageKey)
             setTimeout(() => {
                 router.push('/campaigns')
             }, 1000)
@@ -197,12 +189,9 @@ const EmailEditor = () => {
 
     return (
         <div className="w-4/5 mx-auto bg-white rounded-lg relative">
-            {isEmailSent ? (
+            {emailCampaignStatus.length > 0 ? (
                 <div>
-                    <CampaignStatusCard
-                        audience="KD"
-                        
-                    />
+                    <CampaignStatusCard audience="KD" />
                 </div>
             ) : (
                 <>
@@ -227,9 +216,9 @@ const EmailEditor = () => {
                         <div className="flex flex-col items-start space-y-2">
                             <input
                                 ref={inputRef}
-                                value={emailData.campaignName}
+                                value={emailData.newTitle}
                                 onChange={e =>
-                                    handleFieldChange('campaignName')(
+                                    handleEmailDataChange('newTitle')(
                                         e.target.value,
                                     )
                                 }
@@ -270,10 +259,11 @@ const EmailEditor = () => {
                         <EditableField
                             label="audienceId"
                             placeholder="Who are you sending this email to?"
-                            value={emailData.audienceId}
+                            value={audienceId}
                             onEdit={() => toggleEdit('audienceId')}
                             editing={editStates.audienceId}
-                            onChange={handleFieldChange('audienceId')}
+                            onChange={handleAudienceIdChange}
+                            onSave={() => handleSaveField('audienceId')}
                         />
                         <EditableField
                             label="From"
@@ -281,7 +271,8 @@ const EmailEditor = () => {
                             value={emailData.fromName}
                             onEdit={() => toggleEdit('fromName')}
                             editing={editStates.fromName}
-                            onChange={handleFieldChange('fromName')}
+                            onChange={handleEmailDataChange('fromName')}
+                            onSave={() => handleSaveField('fromName')}
                         />
                         <EditableField
                             label="From"
@@ -289,7 +280,8 @@ const EmailEditor = () => {
                             value={emailData.from}
                             onEdit={() => toggleEdit('from')}
                             editing={editStates.from}
-                            onChange={handleFieldChange('from')}
+                            onChange={handleEmailDataChange('from')}
+                            onSave={() => handleSaveField('from')}
                         />
                         <EditableField
                             label="Subject"
@@ -297,7 +289,8 @@ const EmailEditor = () => {
                             value={emailData.subject}
                             onEdit={() => toggleEdit('subject')}
                             editing={editStates.subject}
-                            onChange={handleFieldChange('subject')}
+                            onChange={handleEmailDataChange('subject')}
+                            onSave={() => handleSaveField('subject')}
                         />
                         <EditableField
                             label="Body Text"
@@ -305,7 +298,8 @@ const EmailEditor = () => {
                             value={emailData.bodyText}
                             onEdit={() => toggleEdit('bodyText')}
                             editing={editStates.bodyText}
-                            onChange={handleFieldChange('bodyText')}
+                            onChange={handleEmailDataChange('bodyText')}
+                            onSave={() => handleSaveField('bodyText')}
                         />
                         <EditableField
                             label="HTML Template"
@@ -313,8 +307,9 @@ const EmailEditor = () => {
                             value={emailData.htmlContent}
                             onEdit={() => toggleEdit('html')}
                             editing={editStates.html}
-                            onChange={handleFieldChange('htmlContent')}
+                            onChange={handleEmailDataChange('htmlContent')}
                             isFileUpload={true}
+                            onSave={() => handleSaveField('html')}
                         />
                     </div>
                     <Snackbar
