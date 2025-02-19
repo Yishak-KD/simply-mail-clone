@@ -14,8 +14,10 @@ const Audience = () => {
     const [loading, setLoading] = useState<boolean>(false)
     const [openAudienceModal, setOpenAudienceModal] = useState<boolean>(false)
     const [audiences, setAudiences] = useState<Audience[]>([])
+    const [fetchingAudiences, setFetchingAudiences] = useState<boolean>(true)
 
     const fetchAudienceLists = async () => {
+        setFetchingAudiences(true)
         try {
             const response = await axios.get('/api/audience', {})
 
@@ -25,6 +27,7 @@ const Audience = () => {
         } catch (error) {
             console.error('Error fetching audience lists:', error)
         }
+        setFetchingAudiences(false)
     }
 
     const handleCreateAudience = async () => {
@@ -68,12 +71,15 @@ const Audience = () => {
                     </button>
                 </div>
             </div>
+
             <div>
                 <AudienceTable
                     audienceList={audiences}
                     onAudienceClick={handleAudienceSelection}
+                    fetchingAudiences={fetchingAudiences}
                 />
             </div>
+
             <CreateAudienceModal
                 showAudienceModal={openAudienceModal}
                 onCloseAudienceModal={() => {

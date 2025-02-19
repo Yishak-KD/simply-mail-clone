@@ -21,17 +21,10 @@ export async function GET(
     }
 
     try {
-        const isEmailSent = campaignDeliveryStatus.some(
-            status => status.status === 'sent' || status.status === 'bounced',
-        )
-
         return NextResponse.json(
             {
                 success: true,
-                value: {
-                    statuses: campaignDeliveryStatus,
-                    isEmailSent,
-                },
+                value: campaignDeliveryStatus,
             },
             { status: 200 },
         )

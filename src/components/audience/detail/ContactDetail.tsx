@@ -13,17 +13,24 @@ const ContactDetail = () => {
     const audienceId = param.id as string
     const [recipients, setRecipients] = useState<Recipient[]>([])
     const [openRecipientModal, setOpenRecipientModal] = useState<boolean>(false)
+    const [fetchingRecipients, setFetchingRecipients] = useState<boolean>(true)
 
     const handleRecipientModal = () => {
         setOpenRecipientModal(true)
     }
 
     const fetchRecipient = async () => {
-        const res = await axios.get(`/api/audience/${param.id as string}`)
+        setFetchingRecipients(true)
 
-        if (isSuccessfullStatus(res)) {
-            setRecipients(res.data.value.recipients as Recipient[])
+        try {
+            const res = await axios.get(`/api/audience/${param.id as string}`)
+            if (isSuccessfullStatus(res)) {
+                setRecipients(res.data.value.recipients as Recipient[])
+            }
+        } catch (error) {
+            console.error('Error fetching recipients:', error)
         }
+        setFetchingRecipients(false)
     }
 
     useEffect(() => {
@@ -45,7 +52,10 @@ const ContactDetail = () => {
                     </button>
                 </div>
             </div>
-            <RecipientTable recipient={recipients} />
+            <RecipientTable
+                recipient={recipients}
+                fetchingRecipients={fetchingRecipients}
+            />
             <CreateRecipientModal
                 showRecipientModal={openRecipientModal}
                 onCloseRecipientModal={() => setOpenRecipientModal(false)}

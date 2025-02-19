@@ -1,6 +1,4 @@
 import prisma from '@/services/prisma'
-import { CampaignDeliveryStatusWithRecipient } from '@/types/type'
-import { CampaignDeliveryStatus } from '@prisma/client'
 
 export const getCampaignDeliveryStatusById = async ({
     emailCampaignId,

@@ -1,13 +1,19 @@
 import { Audience } from '@prisma/client'
-import React from 'react'
+import SlidingLoader from '../SlidingLoader'
 
 const AudienceTable = ({
     audienceList,
     onAudienceClick,
+    fetchingAudiences,
 }: {
     audienceList: Audience[]
     onAudienceClick: (id: string) => void
+    fetchingAudiences: boolean
 }) => {
+    if (fetchingAudiences) {
+        return <SlidingLoader />
+    }
+    
     return (
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
             {audienceList.length === 0 ? (
