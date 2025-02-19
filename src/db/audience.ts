@@ -74,7 +74,7 @@ export const fetchRecipientEmailsByAudienceId = async ({
     audienceId,
 }: {
     audienceId: string
-}):Promise<string[]> => {
+}): Promise<{ userName: string | null; userEmail: string }[]> => {
     const audience = await prisma.audience.findUnique({
         where: {
             id: audienceId,
@@ -83,11 +83,18 @@ export const fetchRecipientEmailsByAudienceId = async ({
             recipients: {
                 select: {
                     email: true,
+                    name: true,
                 },
             },
         },
     })
 
-    const emails = audience?.recipients.map(recipient => recipient.email)
-    return emails ?? []
+    return (
+        audience?.recipients.map(recipient => {
+            return {
+                userName: recipient.name,
+                userEmail: recipient.email,
+            }
+        }) ?? []
+    )
 }

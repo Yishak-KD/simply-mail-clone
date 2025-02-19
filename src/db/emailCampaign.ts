@@ -26,7 +26,11 @@ export const createEmailCampaign = async (): Promise<
 }
 
 export const getEmailCampaigns = async (): Promise<EmailCampaign[]> => {
-    return await prisma.emailCampaign.findMany()
+    return await prisma.emailCampaign.findMany({
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
 }
 
 export const getEmailCampaignTitleById = async ({
