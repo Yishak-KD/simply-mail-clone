@@ -9,22 +9,25 @@ import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import EditableField from './EditableField'
 import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import { DEFAULT_FROM_EMAIL } from '@/constants/constants'
-import { CampaignDeliveryStatus, EmailCampaign } from '@prisma/client'
-import CampaignStatusCard from './CampaignStatus'
+import { Audience, EmailCampaign, StatusType } from '@prisma/client'
+import { CampaignDeliveryStatusWithRecipient } from '@/types/type'
+import SpinningLoader from '../SpinningLoader'
+import CampaignStatusCard from './CampaignStatus/CampaignStatus'
+import ActivityTab from './CampaignStatus/ActivityTab'
 
 interface EmailData {
     from: string
     subject: string
     fromName: string
     bodyText: string
-    htmlContent: string
+    html: string
     newTitle: string
 }
 
 const EmailEditor = () => {
     const router = useRouter()
     const param = useParams()
-    const campaignId = param.id
+    const campaignId = param.id as string
     const inputRef = useRef<HTMLInputElement | null>(null)
 
     const [audienceId, setAudienceId] = useState<string>('')
@@ -33,7 +36,7 @@ const EmailEditor = () => {
         subject: '',
         fromName: '',
         bodyText: '',
-        htmlContent: '',
+        html: '',
         newTitle: '',
     })
 
@@ -46,6 +49,8 @@ const EmailEditor = () => {
         html: false,
     })
 
+    const [fetchCampaignStatus, setFetchCampaignStatus] =
+        useState<boolean>(true)
     const [editNameClicked, setEditNameClicked] = useState<boolean>(false)
     const [isEmailLoading, setIsEmailLoading] = useState<boolean>(false)
     const [openSnackbar, setOpenSnackbar] = useState<boolean>(false)
@@ -53,22 +58,40 @@ const EmailEditor = () => {
     const [snackbarSeverity, setSnackbarSeverity] = useState<
         'success' | 'error'
     >('success')
-    const [emailCampaignStatus, setEmailCampaignStatus] = useState<
-        CampaignDeliveryStatus[]
+    const [campaignRecipientsStatus, setCampaignRecipientsStatus] = useState<
+        CampaignDeliveryStatusWithRecipient[]
     >([])
+    const [statusFilter, setStatusFilter] = useState<StatusType | 'all'>('all')
+    const [audienceList, setAudienceList] = useState<Audience[]>([])
+    const sentEmailCount = campaignRecipientsStatus.filter(
+        status => status.status === 'sent',
+    ).length
+    const bouncedEmailCount = campaignRecipientsStatus.filter(
+        status => status.status === 'bounced',
+    ).length
+    const total = campaignRecipientsStatus.length
+    const subject = campaignRecipientsStatus[0]?.emailCampaign.subject ?? ''
+
+    const filteredRecipients = campaignRecipientsStatus.filter(status =>
+        statusFilter === 'all' ? true : status.status === statusFilter,
+    )
 
     const fetchEmailCampaignStatus = async () => {
+        setFetchCampaignStatus(true)
         try {
             const res = await axios.get(
                 `/api/emailCampaign/${campaignId}/status`,
             )
 
             if (isSuccessfullStatus(res)) {
-                setEmailCampaignStatus(res.data.value)
+                setCampaignRecipientsStatus(
+                    res.data.value as CampaignDeliveryStatusWithRecipient[],
+                )
             }
         } catch (error) {
             console.error('Error fetching email campaign status:', error)
         }
+        setFetchCampaignStatus(false)
     }
 
     const fetchEmailCampaign = async () => {
@@ -84,7 +107,7 @@ const EmailEditor = () => {
                     subject: campaignData.subject || '',
                     fromName: campaignData.fromName || '',
                     bodyText: campaignData.bodyText || '',
-                    htmlContent: campaignData.html || '',
+                    html: campaignData.html || '',
                     newTitle: campaignData.title || '',
                 })
                 setAudienceId(campaignData.audienceId || '')
@@ -94,9 +117,28 @@ const EmailEditor = () => {
         }
     }
 
+    const fetchAudienceLists = async () => {
+        try {
+            const response = await axios.get('/api/audience')
+
+            if (isSuccessfullStatus(response)) {
+                setAudienceList(response.data.value as Audience[])
+            }
+        } catch (error) {
+            console.error('Error fetching audience lists:', error)
+        }
+    }
+
     useEffect(() => {
-        fetchEmailCampaignStatus()
-        fetchEmailCampaign()
+        fetchEmailCampaignStatus().catch(error => {
+            console.error('Error fetching email campaign status:', error)
+        })
+        fetchEmailCampaign().catch(error => {
+            console.error('Error fetching email campaign:', error)
+        })
+        fetchAudienceLists().catch(error => {
+            console.error('Error fetching audience lists:', error)
+        })
     }, [])
 
     const saveEmailData = async (data: EmailData) => {
@@ -142,7 +184,7 @@ const EmailEditor = () => {
     }
 
     const handleSendEmail = async () => {
-        const { subject, bodyText, newTitle, from, fromName, htmlContent } =
+        const { subject, bodyText, newTitle, from, fromName, html: htmlContent } =
             emailData
 
         if (!audienceId || !from || !subject || !htmlContent || !newTitle) {
@@ -187,11 +229,28 @@ const EmailEditor = () => {
         setOpenSnackbar(false)
     }
 
+    if (fetchCampaignStatus) {
+        return <SpinningLoader />
+    }
+
     return (
         <div className="w-4/5 mx-auto bg-white rounded-lg relative">
-            {emailCampaignStatus.length > 0 ? (
+            {campaignRecipientsStatus.length > 0 ? (
                 <div>
-                    <CampaignStatusCard audience="KD" />
+                    <CampaignStatusCard
+                        subject={subject}
+                        recipientsCount={campaignRecipientsStatus.length}
+                        bouncedCount={bouncedEmailCount.toString()}
+                        sentCount={sentEmailCount.toString()}
+                    />
+                    <ActivityTab
+                        statusFilter={statusFilter}
+                        onFilterChange={value => setStatusFilter(value)}
+                        filteredRecipients={filteredRecipients}
+                        sent={sentEmailCount.toString()}
+                        bounced={bouncedEmailCount.toString()}
+                        total={total.toString()}
+                    />
                 </div>
             ) : (
                 <>
@@ -257,13 +316,14 @@ const EmailEditor = () => {
                     </div>
                     <div className="mt-12 border rounded-lg">
                         <EditableField
-                            label="audienceId"
+                            label="Audience Name"
                             placeholder="Who are you sending this email to?"
                             value={audienceId}
                             onEdit={() => toggleEdit('audienceId')}
                             editing={editStates.audienceId}
                             onChange={handleAudienceIdChange}
                             onSave={() => handleSaveField('audienceId')}
+                            audienceList={audienceList}
                         />
                         <EditableField
                             label="From"
@@ -304,10 +364,10 @@ const EmailEditor = () => {
                         <EditableField
                             label="HTML Template"
                             placeholder="Upload an HTML template for your email"
-                            value={emailData.htmlContent}
+                            value={emailData.html}
                             onEdit={() => toggleEdit('html')}
                             editing={editStates.html}
-                            onChange={handleEmailDataChange('htmlContent')}
+                            onChange={handleEmailDataChange('html')}
                             isFileUpload={true}
                             onSave={() => handleSaveField('html')}
                         />

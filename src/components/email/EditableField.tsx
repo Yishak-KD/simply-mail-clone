@@ -1,9 +1,5 @@
 import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants'
-import { fetchKBUsersFromFirebase, KBUser } from '@/services/firebase'
-import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import { Audience } from '@prisma/client'
-import axios from 'axios'
-import { useEffect, useState } from 'react'
 
 interface EditableFieldProps {
     label: string
@@ -14,6 +10,7 @@ interface EditableFieldProps {
     onChange: (value: string) => void
     isFileUpload?: boolean
     onSave: VoidFunction
+    audienceList?: Audience[]
 }
 
 const EditableField = ({
@@ -24,25 +21,10 @@ const EditableField = ({
     editing,
     onChange,
     isFileUpload,
-    onSave
+    onSave,
+    audienceList = [],
 }: EditableFieldProps) => {
-    const [audienceList, setAudienceList] = useState<Audience[]>([])
-
-    const fetchAudienceLists = async () => {
-        try {
-            const response = await axios.get('/api/audience')
-
-            if (isSuccessfullStatus(response)) {
-                setAudienceList(response.data.value as Audience[])
-            }
-        } catch (error) {
-            console.error('Error fetching audience lists:', error)
-        }
-    }
-
-    useEffect(() => {
-        fetchAudienceLists().catch(err => console.error(err))
-    }, [])
+    
 
     const handleAudienceChange = (selectedAudience: string) => {
         if (selectedAudience === KEDUS_BIBLE_FIREBASE_AUDIENCE) {
@@ -75,7 +57,7 @@ const EditableField = ({
             {!editing ? (
                 <div className="flex justify-between items-center">
                     <p className="font-light">
-                        {label === 'audienceId' ? (
+                        {label === 'Audience Name' ? (
                             <>
                                 {placeholder}{' '}
                                 {value && (
@@ -98,7 +80,7 @@ const EditableField = ({
                     >
                         {isFileUpload
                             ? 'Upload Template'
-                            : label === 'audienceId'
+                            : label === 'Audience Name'
                               ? 'Edit recipients'
                               : label === 'From'
                                 ? 'Edit from'
@@ -121,7 +103,7 @@ const EditableField = ({
                                 }
                             }}
                         />
-                    ) : label === 'audienceId' ? (
+                    ) : label === 'Audience Name' ? (
                         <div className="space-y-2">
                             <select
                                 className="w-full p-2 border rounded"
