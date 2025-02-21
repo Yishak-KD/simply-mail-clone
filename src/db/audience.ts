@@ -1,4 +1,5 @@
 import prisma from '@/services/prisma'
+import { AudienceWithRecipientCount } from '@/types/type'
 import { Audience, Recipient } from '@prisma/client'
 
 export interface AudienceWithRecipents extends Audience {
@@ -19,8 +20,22 @@ export const fetchAudienceWithId = async (
     return audience
 }
 
-export const fetchAllAudiences = async (): Promise<Audience[] | null> => {
-    return await prisma.audience.findMany()
+export const fetchAllAudiences = async (): Promise<
+    AudienceWithRecipientCount[]
+> => {
+    const audiences = await prisma.audience.findMany({
+        include: {
+            _count: {
+                select: { recipients: true },
+            },
+        },
+    })
+
+    return audiences.map(audience => ({
+        id: audience.id,
+        name: audience.name,
+        recipientCount: audience._count.recipients,
+    }))
 }
 
 export const createAudience = async ({

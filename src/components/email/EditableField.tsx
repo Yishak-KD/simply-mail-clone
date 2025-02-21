@@ -1,5 +1,5 @@
 import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants'
-import { Audience } from '@prisma/client'
+import { AudienceWithRecipientCount } from '@/types/type'
 
 interface EditableFieldProps {
     label: string
@@ -10,7 +10,7 @@ interface EditableFieldProps {
     onChange: (value: string) => void
     isFileUpload?: boolean
     onSave: VoidFunction
-    audienceList?: Audience[]
+    audienceList?: AudienceWithRecipientCount[]
 }
 
 const EditableField = ({
@@ -54,7 +54,7 @@ const EditableField = ({
                                 {placeholder}{' '}
                                 {value && (
                                     <span className="text-blue-800 font-bold">
-                                        {`${value.split(', ').length} recipients`}
+                                        {`${audienceList.find(audience => audience.id === value)?.recipientCount ?? 0} recipients`}
                                     </span>
                                 )}
                             </>

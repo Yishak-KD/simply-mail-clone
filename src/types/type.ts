@@ -1,4 +1,4 @@
-import { Audience, EmailCampaign, Recipient, StatusType } from '@prisma/client'
+import { EmailCampaign, Recipient, StatusType } from '@prisma/client'
 
 export interface ChurchMember {
     Church?: string
@@ -20,13 +20,8 @@ export type CampaignDeliveryStatusWithRecipient = {
     createdAt: Date
 }
 
-export interface AudienceAndRecipientCount {
-    audience: Audience | null
-    recipientCount: number
-}
-
-export interface AudienceWithRecipient {
+export type AudienceWithRecipientCount = {
     id: string
     name: string
-    recipients: Recipient[]
+    recipientCount: number
 }

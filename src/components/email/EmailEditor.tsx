@@ -9,8 +9,8 @@ import { KeyboardEvent, useEffect, useRef, useState } from 'react'
 import EditableField from './EditableField'
 import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import { DEFAULT_FROM_EMAIL } from '@/constants/constants'
-import { Audience, EmailCampaign, StatusType } from '@prisma/client'
-import { CampaignDeliveryStatusWithRecipient } from '@/types/type'
+import { EmailCampaign, StatusType } from '@prisma/client'
+import { AudienceWithRecipientCount, CampaignDeliveryStatusWithRecipient } from '@/types/type'
 import SpinningLoader from '../SpinningLoader'
 import CampaignStatusCard from './CampaignStatus/CampaignStatus'
 import ActivityTab from './CampaignStatus/ActivityTab'
@@ -62,7 +62,7 @@ const EmailEditor = () => {
         CampaignDeliveryStatusWithRecipient[]
     >([])
     const [statusFilter, setStatusFilter] = useState<StatusType | 'all'>('all')
-    const [audienceList, setAudienceList] = useState<Audience[]>([])
+    const [audienceList, setAudienceList] = useState<AudienceWithRecipientCount[]>([])
     const sentEmailCount = campaignRecipientsStatus.filter(
         status => status.status === 'sent',
     ).length
@@ -117,12 +117,12 @@ const EmailEditor = () => {
         }
     }
 
-    const fetchAudienceLists = async () => {
+    const fetchAudiencesWithRecipientCounts = async () => {
         try {
             const response = await axios.get('/api/audience')
 
             if (isSuccessfullStatus(response)) {
-                setAudienceList(response.data.value as Audience[])
+                setAudienceList(response.data.value as AudienceWithRecipientCount[])
             }
         } catch (error) {
             console.error('Error fetching audience lists:', error)
@@ -136,7 +136,7 @@ const EmailEditor = () => {
         fetchEmailCampaign().catch(error => {
             console.error('Error fetching email campaign:', error)
         })
-        fetchAudienceLists().catch(error => {
+        fetchAudiencesWithRecipientCounts().catch(error => {
             console.error('Error fetching audience lists:', error)
         })
     }, [])
