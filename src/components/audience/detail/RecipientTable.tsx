@@ -1,4 +1,4 @@
-import SlidingLoader from '@/components/SlidingLoader'
+import SpinningLoader from '@/components/SpinningLoader'
 import { Recipient } from '@prisma/client'
 
 interface RecipientTableProps {
@@ -11,7 +11,7 @@ const RecipientTable = ({
     fetchingRecipients,
 }: RecipientTableProps) => {
     if (fetchingRecipients) {
-        return <SlidingLoader />
+        return <SpinningLoader />
     }
     
     return (

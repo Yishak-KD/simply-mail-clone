@@ -3,7 +3,7 @@ import { EmailCampaign } from '@prisma/client'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import SlidingLoader from '../SlidingLoader'
+import SpinningLoader from '../SpinningLoader'
 
 const EmailItem = () => {
     const [emailCampaigns, setEmailCampaigns] = useState<
@@ -33,7 +33,7 @@ const EmailItem = () => {
     }, [])
 
     if (fetchEmailCampaigns) {
-        return <SlidingLoader />
+        return <SpinningLoader />
     }
 
     return (

@@ -1,4 +1,5 @@
 import prisma from '@/services/prisma'
+import { CampaignDeliveryStatusWithRecipient } from '@/types/type'
 
 export const getCampaignDeliveryStatusById = async ({
     emailCampaignId,

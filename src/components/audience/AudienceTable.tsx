@@ -1,5 +1,5 @@
 import { Audience } from '@prisma/client'
-import SlidingLoader from '../SlidingLoader'
+import SpinningLoader from '../SpinningLoader'
 
 const AudienceTable = ({
     audienceList,
@@ -11,7 +11,7 @@ const AudienceTable = ({
     fetchingAudiences: boolean
 }) => {
     if (fetchingAudiences) {
-        return <SlidingLoader />
+        return <SpinningLoader />
     }
     
     return (
