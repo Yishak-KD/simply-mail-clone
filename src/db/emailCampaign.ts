@@ -49,23 +49,7 @@ export const fetchEmailCampaignById = async ({
             subject: true,
             bodyText: true,
             html: true,
-        }
-    })
-}
-
-export const updateEmailCampaignTitle = async ({
-    emailCampaignId,
-    newTitle,
-}: {
-    emailCampaignId: string
-    newTitle: string
-}): Promise<EmailCampaign> => {
-    return await prisma.emailCampaign.update({
-        where: {
-            id: emailCampaignId,
-        },
-        data: {
-            title: newTitle,
+            audienceId: true,
         },
     })
 }
@@ -79,6 +63,7 @@ export const updateEmailCampaign = async ({
     newTitle,
     fromName,
     replyTo,
+    audienceId,
 }: {
     emailCampaignId: string
     from: string
@@ -88,6 +73,7 @@ export const updateEmailCampaign = async ({
     newTitle: string
     fromName: string
     replyTo?: string
+    audienceId: string
 }): Promise<EmailCampaign> => {
     return await prisma.emailCampaign.update({
         where: { id: emailCampaignId },
@@ -99,6 +85,7 @@ export const updateEmailCampaign = async ({
             from,
             fromName,
             replyTo,
+            audienceId,
         },
     })
 }

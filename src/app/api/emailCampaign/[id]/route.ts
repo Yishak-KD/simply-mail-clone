@@ -53,7 +53,7 @@ export async function POST(
     { params }: { params: { id: string } },
 ) {
     const emailCampaignId = params?.id
-    const { newTitle, from, html, subject, bodyText, fromName } =
+    const { newTitle, from, html, subject, bodyText, fromName, audienceId } =
         await req.json()
 
     try {
@@ -75,6 +75,7 @@ export async function POST(
             html,
             newTitle,
             subject,
+            audienceId,
         })
 
         return NextResponse.json(

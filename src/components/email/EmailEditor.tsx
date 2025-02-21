@@ -156,13 +156,27 @@ const EmailEditor = () => {
         }
 
     const handleSaveField = async (field: keyof typeof editStates) => {
-        await saveEmailData(emailData)
+        if (field === 'audienceId') {
+            try {
+                await axios.post(`/api/emailCampaign/${campaignId}`, {
+                    audienceId: audienceId,
+                })
+            } catch (error) {
+                console.error('Error saving audience:', error)
+            }
+        } else {
+            await saveEmailData(emailData)
+        }
         toggleEdit(field)
     }
 
-    const handleAudienceIdChange = (value: string) => {
-        setEmailData(emailData)
-        setAudienceId(value)
+    const handleAudienceIdChange = (selectedAudience: string) => {
+        const selected = audienceList.find(
+            audience => audience.name === selectedAudience,
+        )
+        if (selected) {
+            setAudienceId(selected.id)
+        }
     }
 
     const toggleEdit = (field: keyof typeof editStates) => {
@@ -184,8 +198,14 @@ const EmailEditor = () => {
     }
 
     const handleSendEmail = async () => {
-        const { subject, bodyText, newTitle, from, fromName, html: htmlContent } =
-            emailData
+        const {
+            subject,
+            bodyText,
+            newTitle,
+            from,
+            fromName,
+            html: htmlContent,
+        } = emailData
 
         if (!audienceId || !from || !subject || !htmlContent || !newTitle) {
             setSnackbarMessage(

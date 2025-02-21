@@ -24,20 +24,12 @@ const EditableField = ({
     onSave,
     audienceList = [],
 }: EditableFieldProps) => {
-    
-
     const handleAudienceChange = (selectedAudience: string) => {
         if (selectedAudience === KEDUS_BIBLE_FIREBASE_AUDIENCE) {
             onChange(KEDUS_BIBLE_FIREBASE_AUDIENCE)
             return
         }
-
-        const selected = audienceList.find(
-            audience => audience.name === selectedAudience,
-        )
-        if (selected) {
-            onChange(selected.id)
-        }
+        onChange(selectedAudience)
     }
 
     const handleFileUpload = (file: File) => {
