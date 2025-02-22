@@ -1,5 +1,6 @@
 import { KEDUS_BIBLE_FIREBASE_AUDIENCE } from '@/constants/constants'
 import { AudienceWithRecipientCount } from '@/types/type'
+import { KeyboardEvent } from 'react'
 
 interface EditableFieldProps {
     label: string
@@ -135,6 +136,13 @@ const EditableField = ({
                             className="w-full p-2 border rounded"
                             value={value}
                             onChange={e => onChange(e.target.value)}
+                            onKeyDown={(
+                                event: KeyboardEvent<HTMLInputElement>,
+                            ) => {
+                                if (event.key === 'Enter') {
+                                    onSave()
+                                }
+                            }}
                             placeholder={placeholder}
                         />
                     )}

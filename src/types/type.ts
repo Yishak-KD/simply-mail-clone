@@ -1,4 +1,4 @@
-import { EmailCampaign, Recipient, StatusType } from '@prisma/client'
+import { EmailCampaign, StatusType } from '@prisma/client'
 
 export interface ChurchMember {
     Church?: string
