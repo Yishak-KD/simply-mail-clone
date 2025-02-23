@@ -38,7 +38,7 @@ const EmailItem = () => {
 
     return (
         <div className="w-4/5 mx-auto my-10">
-            {emailCampaigns && emailCampaigns?.length > 0 && emailCampaigns ? (
+            {emailCampaigns && emailCampaigns?.length > 0 ? (
                 <table className="min-w-full border-collapse divide-y divide-gray-300">
                     <thead className="bg-gray-100">
                         <tr>

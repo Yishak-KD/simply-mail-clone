@@ -10,10 +10,14 @@ import EditableField from './EditableField'
 import { isSuccessfullStatus } from '@/utils/ResponseValidation'
 import { DEFAULT_FROM_EMAIL } from '@/constants/constants'
 import { EmailCampaign, StatusType } from '@prisma/client'
-import { AudienceWithRecipientCount, CampaignDeliveryStatusWithRecipient } from '@/types/type'
+import {
+    AudienceWithRecipientCount,
+    CampaignDeliveryStatusWithRecipient,
+} from '@/types/type'
 import SpinningLoader from '../SpinningLoader'
 import CampaignStatusCard from './CampaignStatus/CampaignStatus'
 import ActivityTab from './CampaignStatus/ActivityTab'
+import NotificationSnackbar from '../NotificationSnackbar'
 
 interface EmailData {
     from: string
@@ -62,7 +66,9 @@ const EmailEditor = () => {
         CampaignDeliveryStatusWithRecipient[]
     >([])
     const [statusFilter, setStatusFilter] = useState<StatusType | 'all'>('all')
-    const [audienceList, setAudienceList] = useState<AudienceWithRecipientCount[]>([])
+    const [audienceList, setAudienceList] = useState<
+        AudienceWithRecipientCount[]
+    >([])
     const sentEmailCount = campaignRecipientsStatus.filter(
         status => status.status === 'sent',
     ).length
@@ -122,7 +128,9 @@ const EmailEditor = () => {
             const response = await axios.get('/api/audience')
 
             if (isSuccessfullStatus(response)) {
-                setAudienceList(response.data.value as AudienceWithRecipientCount[])
+                setAudienceList(
+                    response.data.value as AudienceWithRecipientCount[],
+                )
             }
         } catch (error) {
             console.error('Error fetching audience lists:', error)
@@ -392,29 +400,12 @@ const EmailEditor = () => {
                             onSave={() => handleSaveField('html')}
                         />
                     </div>
-                    <Snackbar
-                        open={openSnackbar}
-                        autoHideDuration={3000}
-                        onClose={handleCloseSnackbar}
-                        message={snackbarMessage}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'center',
-                        }}
-                        style={{
-                            textAlign: 'center',
-                        }}
-                    >
-                        <Alert
-                            onClose={handleCloseSnackbar}
-                            severity={snackbarSeverity}
-                            sx={{
-                                width: 'fit',
-                            }}
-                        >
-                            {snackbarMessage}
-                        </Alert>
-                    </Snackbar>
+                    <NotificationSnackbar
+                        openSnackbar={openSnackbar}
+                        handleCloseSnackbar={handleCloseSnackbar}
+                        snackbarMessage={snackbarMessage}
+                        snackbarSeverity={snackbarSeverity}
+                    />
                 </>
             )}
         </div>
