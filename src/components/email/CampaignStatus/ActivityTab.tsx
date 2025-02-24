@@ -13,6 +13,7 @@ interface ActivityTabProps {
     sent: string
     bounced: string
     total: string
+    html: string
 }
 
 const ActivityTab = ({
@@ -22,6 +23,7 @@ const ActivityTab = ({
     sent,
     bounced,
     total,
+    html
 }: ActivityTabProps) => {
     const [activeTab, setActiveTab] = useState<string>('Overview')
 
@@ -37,6 +39,7 @@ const ActivityTab = ({
                     sent={Number(sent)}
                     bounced={Number(bounced)}
                     total={Number(total)}
+                    html={html}
                 />
             ),
         },
@@ -62,9 +65,7 @@ const ActivityTab = ({
             style={{ height: 'calc(100vh - 54px)' }}
             className="flex flex-col w-full mx-auto mt-8"
         >
-            {/* <main className="flex flex-1 "> */}
             <div className="m-0 rounded-2xl w-full text-black">
-                {/* <div className="md:h-[600px] h-full lg:mx-[56px] md:mx-10 mx-5 bg-[#FFFFFF] rounded-2xl border border-[#E9E9EA]"> */}
                 <div className="md:overflow-x-hidden overflow-x-auto  md:h-[53px] h-[60px] flex items-center space-x-32 w-full px-9 text-sm text-[#7F7D83] rounded-t-2xl border-b border-[#E9E9EA] mb-10">
                     {TABS.map((tab, id) => (
                         <Tab
@@ -76,9 +77,7 @@ const ActivityTab = ({
                     ))}
                 </div>
                 <div>{renderContent()}</div>
-                {/* </div> */}
             </div>
-            {/* </main> */}
         </div>
     )
 }

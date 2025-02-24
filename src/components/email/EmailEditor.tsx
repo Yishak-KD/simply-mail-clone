@@ -75,6 +75,7 @@ const EmailEditor = () => {
     ).length
     const total = campaignRecipientsStatus.length
     const subject = campaignRecipientsStatus[0]?.emailCampaign.subject ?? ''
+    const htmlBody = campaignRecipientsStatus[0]?.emailCampaign.html ?? ''
 
     const filteredRecipients = campaignRecipientsStatus.filter(status =>
         statusFilter === 'all' ? true : status.status === statusFilter,
@@ -276,6 +277,7 @@ const EmailEditor = () => {
                         sent={sentEmailCount.toString()}
                         bounced={bouncedEmailCount.toString()}
                         total={total.toString()}
+                        html={htmlBody}
                     />
                 </div>
             ) : (
