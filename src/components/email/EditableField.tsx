@@ -83,12 +83,12 @@ const EditableField = ({
                     </button>
                 </div>
             ) : (
-                <div className="mt-2 w-1/4">
+                <div className="mt-2">
                     {isFileUpload ? (
                         <input
                             type="file"
                             accept=".html"
-                            className="w-full p-2 border rounded"
+                            className="w-2/5 p-2 border rounded"
                             onChange={e => {
                                 const file = e.target.files?.[0]
                                 if (file) {
@@ -99,7 +99,7 @@ const EditableField = ({
                     ) : label === 'Audience Name' ? (
                         <div className="space-y-2">
                             <select
-                                className="w-full p-2 border rounded"
+                                className="w-[30%] p-2 border rounded"
                                 value={
                                     value
                                         ? (audienceList.find(
@@ -130,10 +130,22 @@ const EditableField = ({
                                     ))}
                             </select>
                         </div>
+                    ) : label === 'Body Text' ? (
+                        <textarea
+                            className="w-2/4 p-2 border rounded overflow-y-hidden resize-none h-32"
+                            value={value}
+                            onChange={e => onChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    onSave()
+                                }
+                            }}
+                            placeholder={placeholder}
+                        />
                     ) : (
                         <input
                             type="text"
-                            className="w-full p-2 border rounded"
+                            className="w-2/5 p-2 border rounded"
                             value={value}
                             onChange={e => onChange(e.target.value)}
                             onKeyDown={(
