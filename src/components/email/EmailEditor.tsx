@@ -67,15 +67,20 @@ const EmailEditor = () => {
     const [audienceList, setAudienceList] = useState<
         AudienceWithRecipientCount[]
     >([])
-    const sentEmailCount = campaignRecipientsStatus.filter(
-        status => status.status === 'sent',
-    ).length
-    const bouncedEmailCount = campaignRecipientsStatus.filter(
-        status => status.status === 'bounced',
-    ).length
+    const statusCounts = campaignRecipientsStatus.reduce(
+        (acc, status) => {
+            acc[status.status]++
+            return acc
+        },
+        { sent: 0, bounced: 0 } as Record<StatusType, number>,
+    )
+
+    const { sent: sentEmailCount, bounced: bouncedEmailCount } = statusCounts
+
     const total = campaignRecipientsStatus.length
-    const subject = campaignRecipientsStatus[0]?.emailCampaign.subject ?? ''
-    const htmlBody = campaignRecipientsStatus[0]?.emailCampaign.html ?? ''
+
+    const { subject = '', html: htmlBody = '' } =
+        campaignRecipientsStatus[0]?.emailCampaign ?? {}
 
     const filteredRecipients = campaignRecipientsStatus.filter(status =>
         statusFilter === 'all' ? true : status.status === statusFilter,

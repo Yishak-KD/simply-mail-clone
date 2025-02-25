@@ -2,7 +2,7 @@ interface CampaignStatusCardProps {
     recipientsCount?: number
     sentCount?: string
     bouncedCount?: string
-    subject?: string
+    subject: string | null
     date?: string
 }
 

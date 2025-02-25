@@ -13,7 +13,7 @@ interface ActivityTabProps {
     sent: string
     bounced: string
     total: string
-    html: string
+    html: string | null
 }
 
 const ActivityTab = ({

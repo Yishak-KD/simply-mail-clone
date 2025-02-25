@@ -132,7 +132,7 @@ const EditableField = ({
                         </div>
                     ) : label === 'Body Text' ? (
                         <textarea
-                            className="w-2/4 p-2 border rounded overflow-y-hidden resize-none h-32"
+                            className="w-2/4 p-2 border rounded overflow-y-hidden resize-none h-32 outline-none"
                             value={value}
                             onChange={e => onChange(e.target.value)}
                             onKeyDown={(e) => {
@@ -145,7 +145,7 @@ const EditableField = ({
                     ) : (
                         <input
                             type="text"
-                            className="w-2/5 p-2 border rounded"
+                            className="w-2/5 p-2 border rounded outline-none font-normal"
                             value={value}
                             onChange={e => onChange(e.target.value)}
                             onKeyDown={(

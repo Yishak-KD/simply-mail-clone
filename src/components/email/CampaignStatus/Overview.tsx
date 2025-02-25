@@ -4,7 +4,7 @@ interface OverviewStats {
     sent: number
     bounced: number
     total: number
-    html: string
+    html: string | null
 }
 
 const Overview = ({ sent, bounced, total, html }: OverviewStats) => {
@@ -44,8 +44,10 @@ const Overview = ({ sent, bounced, total, html }: OverviewStats) => {
                 </div>
             </div>
             <div className="w-full mt-6">
-                <div className='text-center font-semibold text-2xl'>Email Content</div>
-                <div dangerouslySetInnerHTML={{ __html: html }} />;
+                <div className="text-center font-semibold text-2xl">
+                    Email Content
+                </div>
+                <div dangerouslySetInnerHTML={{ __html: html || '' }} />;
             </div>
         </div>
     )
