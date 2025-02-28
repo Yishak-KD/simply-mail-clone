@@ -7,7 +7,6 @@ export async function POST(req: NextRequest) {
 
         console.log('Received Webhook Data:', body)
 
-        // Extract important fields
         const { RecordType, MessageID, Recipient, DeliveredAt, Description } =
             body
 
