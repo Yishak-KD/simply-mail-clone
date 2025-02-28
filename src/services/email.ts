@@ -11,6 +11,7 @@ interface EmailUserProps {
   bodyHTML: string;
   attachmentContent?: string;
   attachmentFileName?: string;
+  tag?: string
 }
 
 const email = async ({
@@ -23,6 +24,7 @@ const email = async ({
   bodyHTML,
   attachmentContent,
   attachmentFileName,
+  tag
 }: EmailUserProps) => {
   try {
     const content = attachmentContent
@@ -45,6 +47,7 @@ const email = async ({
       MessageStream: 'broadcast',
       ReplyTo: replyTo ?? from,
       HtmlBody: bodyHTML,
+      Tag: tag,
       Attachments: content
         ? [
             {

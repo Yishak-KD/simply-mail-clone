@@ -58,6 +58,7 @@ export async function POST(req: Request) {
                     subject,
                     bodyText,
                     bodyHTML: updatedHtml,
+                    tag: emailCampaignId
                 })
 
                 await createCampaignDeliveryStatus({
